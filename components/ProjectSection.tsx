@@ -44,7 +44,7 @@ const openFromCorner: Variants = {
     scale: 1,
     opacity: 1,
     filter: "blur(0px)",
-    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] },
+    transition: { duration: 0.85, ease: [0.22, 1, 0.36, 1] as const },
   },
   exit: { opacity: 0, scale: 1.03, transition: { duration: 0.25 } },
 };
