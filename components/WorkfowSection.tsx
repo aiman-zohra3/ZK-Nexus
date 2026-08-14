@@ -4,8 +4,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import {
   motion,
   useScroll,
-  useTransform,
-  type MotionValue,
+  useTransform, type Variants ,MotionValue,
 } from "framer-motion";
 import {
   Search,
@@ -97,7 +96,7 @@ const containerVariants = {
   show: { transition: { staggerChildren: 0.15 } },
 };
 
-const cardVariants = {
+const cardVariants: Variants = {
   hidden: { opacity: 0, y: 40 },
   show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
 };

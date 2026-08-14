@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 import Link from "next/link";
-import { motion, useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
+import { motion, type Variants ,useMotionValue, useSpring, useMotionTemplate } from "framer-motion";
 import { Code2, Palette, ShieldCheck, ArrowRight } from "lucide-react";
 import {
   SiNextdotjs,
@@ -179,7 +179,7 @@ function TechBadge({
           md:h-14 md:w-14 lg:h-16 lg:w-16"
         style={{ backgroundColor: `${color}1A` }}
       >
-        <Icon className="h-5 w-5  md:h-7 md:w-7 lg:h-8 lg:w-8" style={{ color }} />
+        <Icon className="h-5 w-5  md:h-7 md:w-7 lg:h-8 lg:w-8" />
       </div>
 
       <span className="max-w-0 overflow-hidden whitespace-nowrap pr-0 text-xs font-medium text-white opacity-0 transition-all duration-300 ease-out

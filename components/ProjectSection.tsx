@@ -5,7 +5,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion,type Variants  } from "framer-motion";
 import { projects } from "@/data/projects";
 import type { Project } from "@/data/projects";
 import { useRouter } from "next/navigation";
@@ -36,7 +36,7 @@ function getAccent(key?: string) {
   return accentMap[key as keyof typeof accentMap] ?? accentMap.cyan;
 }
 
-const openFromCorner = {
+const openFromCorner: Variants = {
   initial: { x: -70, y: 70, scale: 0.72, opacity: 0, filter: "blur(4px)" },
   animate: {
     x: 0,
@@ -49,17 +49,17 @@ const openFromCorner = {
   exit: { opacity: 0, scale: 1.03, transition: { duration: 0.25 } },
 };
 
-const panelFade = {
+const panelFade: Variants = {
   initial: { opacity: 0, y: 16 },
   animate: {
     opacity: 1,
     y: 0,
-    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
   exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   show: (i = 0) => ({
     opacity: 1,
@@ -67,7 +67,7 @@ const fadeUp = {
     transition: {
       delay: 0.25 + i * 0.07,
       duration: 0.55,
-      ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+      ease: [0.22, 1, 0.36, 1],
     },
   }),
   exit: { opacity: 0, y: -10, transition: { duration: 0.2 } },
