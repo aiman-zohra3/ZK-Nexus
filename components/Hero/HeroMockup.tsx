@@ -6,6 +6,8 @@ import { HeartPulse, Users, ShieldCheck, Building2, Check, ArrowRight, Zap } fro
 import Browser1 from "./Browser1";
 import Left from "./Left1";
 
+import Link from "next/link";
+
 /* ─────────────────────────────────────────────
    ZK PROOF NODE GRAPH
 ───────────────────────────────────────────── */
@@ -354,8 +356,7 @@ export default function HeroMockup() {
 <div className="relative lg:flex w-full lg:flex-1 lg:items-start lg:justify-center gap-8 overflow-hidden px-6 pt-1 pb-1 md:px-10 sm:px-12 lg:px-16 xl:px-24 lg:pb-0">
           {/* LEFT CONTENT */}
 
-<div className="w-full max-w-3xl">
-    <motion.div
+<div className="w-full max-w-sm md:max-w-xl lg:max-w-3xl">s    <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -371,8 +372,7 @@ export default function HeroMockup() {
 <h1 className="text-4xl font-black leading-[0.95] lg:text-7xl">
                 <span className="mt-10 mr-3 inline-block text-white">Build</span>
 
-              <span className="relative inline-flex h-[1.05em] min-w-[580px] md:min-w-[700pxq] lg:min-w-[360px] items-baseline overflow-hidden align-baseline">
-                <AnimatePresence mode="wait">
+<span className="relative inline-flex h-[1.05em] min-w-[160px] sm:min-w-[220px] md:min-w-[320px] lg:min-w-[420px] items-baseline overflow-hidden align-baseline">                <AnimatePresence mode="wait">
                   <motion.span
                     key={currentWord}
                     initial={{ y: 60, opacity: 0 }}
@@ -416,19 +416,20 @@ export default function HeroMockup() {
               ))}
             </div>
 
-            <button
-              className="
-                group mt-6 md:mt-10 -ml-0 inline-flex items-center gap-2
-                rounded-full  border border-[#00E5E5] bg-[#00E5E5]/10 hover:bg-[#00E5E5]/80 hover:text-black
-                px-4 md:px-5 py-2 font-semibold text-white
-                shadow-lg shadow-cyan-400/20
-                transition-all duration-300 text-sm md:text-md
-                hover:-translate-y-1 hover:shadow-cyan-400/40
-              "
-            >
-              Let's Build Together
-              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </button>
+            <Link
+  href="/contact"
+  className="
+    group mt-6 md:mt-10 -ml-0 inline-flex items-center gap-2
+    rounded-full  border border-[#00E5E5] bg-[#00E5E5]/10 hover:bg-[#00E5E5]/80 hover:text-black
+    px-4 md:px-5 py-2 font-semibold text-white
+    shadow-lg shadow-cyan-400/20
+    transition-all duration-300 text-sm md:text-md
+    hover:-translate-y-1 hover:shadow-cyan-400/40
+  "
+>
+  Let's Build Together
+  <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" />
+</Link>
           </div>
 
           {/* RIGHT SIDE — ZK Proof Node Graph */}

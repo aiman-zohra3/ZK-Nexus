@@ -432,8 +432,7 @@ const handleBlur = (
     transition={{ delay: 0.3 }}
     className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
   >
-    Tell us about your project or drop us a message on WhatsApp
-    whichever is faster for you.
+    Have a project in mind or just questions? Our team responds quickly and is ready to help bring your vision to life.
   </motion.p>
 </section>
 
