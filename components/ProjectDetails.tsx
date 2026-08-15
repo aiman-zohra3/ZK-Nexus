@@ -6,16 +6,15 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import type { Variants } from "framer-motion";
 import type { Project } from "@/data/projects";
-import { useTransitionRouter } from "@/components/Hero/TransitionProvider";
 
 // Colors written as literal arbitrary-value classes (Tailwind's JIT
 // scanner needs to see the full class string at build time — no
 // runtime concatenation, and no reliance on tailwind.config tokens).
 const accentMap = {
   violet: {
-    text: "text-[#8B7FFF]",
-    border: "border-[#8B7FFF]/40 hover:bg-[#8B7FFF]/10",
-    dot: "bg-[#8B7FFF]",
+    text: "text-[#00E5E5]",
+    border: "border-[#00E5E5]/40 hover:bg-[#00E5E5]/10",
+    dot: "bg-[#00E5E5]",
   },
   cyan: {
     text: "text-[#00E5E5]",
@@ -38,7 +37,6 @@ const fadeUp: Variants = {
 };
 
 export default function ProjectDetail({ project }: { project: Project }) {
-  const { navigate } = useTransitionRouter();
   const accent = getAccent(project.accent);
 
   return (

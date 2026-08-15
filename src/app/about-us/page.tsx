@@ -10,22 +10,22 @@ const values = [
   {
     title: "Security First",
     description: "Built secure from day one.",
-    image: "/security.jfif",
+    image: "/security.jpg",
   },
   {
     title: "Quality Driven",
     description: "Scalable experiences that last.",
-    image: "/quality.jfif",
+    image: "/quality.jpg",
   },
   {
     title: "Transparency",
     description: "Clear timelines, full visibility.",
-    image: "/transparency.jfif",
+    image: "/transparency.jpg",
   },
   {
     title: "Long-Term Partnerships",
     description: "Growing with our clients.",
-    image: "/partenership.jfif",
+    image: "/partenership.jpg",
   },
 ];
 
@@ -64,31 +64,31 @@ const team = [
   {
     name: "Eesha Baig",
     role: "Founder & Full Stack Engineer",
-    image: "/woman1.jfif",
+    image: "/woman1.jpg",
     bio: "Leads product strategy, full stack development, and ensures every solution balances innovation, scalability, and security.",
   },
   {
     name: "Hassan Malik",
     role: "Cybersecurity Engineer",
-    image: "/man1.jfif",
+    image: "/man1.jpg",
     bio: "Protects applications through penetration testing, secure architecture, vulnerability assessments, and cloud security.",
   },
   {
     name: "Ahmed Khan",
     role: "UI/UX Designer",
-    image: "/man2.jfif",
+    image: "/man2.jpg",
     bio: "Designs intuitive user experiences and modern interfaces that help businesses stand out and convert visitors into customers.",
   },
   {
     name: "Aiman Zohra",
     role: "Project Manager",
-    image: "/woman2.jfif",
+    image: "/woman2.jpg",
     bio: "Coordinates teams, streamlines workflows, and ensures every project is delivered on time with complete transparency.",
   },
   {
     name: "Usman Tariq",
     role: "Backend & Cloud Engineer",
-    image: "/man3.jfif",
+    image: "/man3.jpg",
     bio: "Builds scalable APIs, cloud infrastructure, and automation systems that power secure enterprise-grade applications.",
   },
 ];

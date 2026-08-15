@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import  TransitionProvider  from "@/components/Hero/TransitionProvider";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import ChatWidget from "@/components/ChatWidget";
@@ -31,7 +30,7 @@ export default function RootLayout({
       <body>
         <ChatWidget/>
         <Navbar />
-        <TransitionProvider>{children}</TransitionProvider>
+       {children}
         <Footer />
       </body>
     </html>
