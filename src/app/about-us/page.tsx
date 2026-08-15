@@ -144,10 +144,10 @@ export default function AboutSection() {
         viewport={{ once: true }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.05] text-white">
-          Building Secure
-          <br /> Digital Experiences <br />
-          That <span className="text-[#00E5E5]">Scale</span>.
+        <h1  className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white sm:mt-8 sm:leading-[0.95]"
+    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
+          Building <span className="text-[#00e5e5]">Secure</span>
+          <br /> Digital Experiences.
         </h1>
       </motion.div>
     </div>
@@ -157,42 +157,14 @@ export default function AboutSection() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ delay: 0.3 }}
-      className="mt-8 max-w-2xl text-base md:text-lg leading-7 md:leading-8 text-[#8B93A3] px-2"
+      className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
     >
       We design, develop, and secure modern digital products that
       empower businesses to innovate confidently and grow faster.
     </motion.p>
   </section>
 
-      {/* ================= STORY ================= */}
-
-      <section className="mx-auto max-w-7xl px-6 pt-1 pb-12">
-        <div className="grid gap-10 lg:gap-16 lg:grid-cols-2">
-          <div className="lg:sticky lg:top-32 lg:h-fit">
-            {SectionTag("Our Story")}
-            <h2 className="text-3xl sm:text-4xl font-black leading-none md:text-6xl">
-              Built For The <span className="text-[#00E5E5]">Future.</span>
-            </h2>
-          </div>
-
-          <div className="relative h-[320px] sm:h-[400px] lg:h-[420px] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]">
-            <motion.div
-              animate={{ y: ["0%", "-50%"] }}
-              transition={{ duration: 16, ease: "linear", repeat: Infinity }}
-              className="flex flex-col gap-8 sm:gap-10"
-            >
-              {[...storyTexts, ...storyTexts].map((text, index) => (
-                <p key={index} className="text-base sm:text-lg leading-7 text-[#bfc4cd]">
-                  {text}
-                </p>
-              ))}
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ================= MISSION & VALUES ================= */}
-
+  
       {/* ================= MISSION & VALUES ================= */}
 
 <section className="mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-32">
@@ -253,6 +225,36 @@ export default function AboutSection() {
     </div>
   </div>
 </section>
+
+      {/* ================= STORY ================= */}
+
+      <section className="mx-auto max-w-7xl px-6 pt-1 pb-12">
+        <div className="grid gap-10 lg:gap-16 lg:grid-cols-2">
+          <div className="lg:sticky lg:top-32 lg:h-fit">
+            {SectionTag("Our Story")}
+            <h2 className="text-3xl sm:text-4xl font-black leading-none md:text-6xl">
+              Built For The <span className="text-[#00E5E5]">Future.</span>
+            </h2>
+          </div>
+
+          <div className="relative h-[320px] sm:h-[400px] lg:h-[420px] overflow-hidden [mask-image:linear-gradient(to_bottom,transparent,black_10%,black_90%,transparent)]">
+            <motion.div
+              animate={{ y: ["0%", "-50%"] }}
+              transition={{ duration: 16, ease: "linear", repeat: Infinity }}
+              className="flex flex-col gap-8 sm:gap-10"
+            >
+              {[...storyTexts, ...storyTexts].map((text, index) => (
+                <p key={index} className="text-base sm:text-lg leading-7 text-gray-300">
+                  {text}
+                </p>
+              ))}
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ================= MISSION & VALUES ================= */}
+
 
       {/* ================= ACHIEVEMENTS ================= */}
 
@@ -351,7 +353,7 @@ export default function AboutSection() {
           </motion.h2>
 
           <div className="overflow-hidden rounded-[24px] sm:rounded-[32px] border border-white/10">
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 ">
               {principles.map((item) => (
                 <motion.div
                   key={item.number}
@@ -360,9 +362,9 @@ export default function AboutSection() {
                   whileHover={{ y: -6 }}
                   viewport={{ once: true }}
                   transition={{ duration: 0.4 }}
-                  className="min-h-[190px] sm:min-h-[220px] border border-white/10 bg-[#0B0C10] p-6 sm:p-8 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,229,0.15)] hover:bg-[#12484c]"
+                  className="min-h-[190px] sm:min-h-[220px] border  border-white/10 bg-[#0B0C10] p-6 sm:p-8 transition-all duration-300 hover:shadow-[0_0_30px_rgba(0,229,229,0.15)] hover:bg-[#5d9ba0]"
                 >
-                  <p className="mb-6 sm:mb-8 text-xs sm:text-sm tracking-[0.25em] text-[#8B93A3]">
+                  <p className="mb-6 sm:mb-8 text-xs sm:text-sm tracking-[0.25em] text-white">
                     {item.number}
                   </p>
                   <h3 className="mb-3 sm:mb-5 text-xl sm:text-3xl font-bold leading-tight">

@@ -403,7 +403,7 @@ const handleBlur = (
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
+    className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
   >
     <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]">
       Contact
@@ -417,7 +417,8 @@ const handleBlur = (
       viewport={{ once: true }}
       transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
     >
-      <h1 className="text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.05] text-white">
+      <h1 className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white  sm:leading-[0.95]"
+    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
         Let&apos;s build something <br />
         <span className="text-[#00E5E5]">secure.</span>
       </h1>
@@ -429,9 +430,9 @@ const handleBlur = (
     whileInView={{ opacity: 1 }}
     viewport={{ once: true }}
     transition={{ delay: 0.3 }}
-    className="mt-8 max-w-2xl text-base md:text-lg leading-7 md:leading-8 text-[#8B93A3] px-2"
+    className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
   >
-    Tell us about your project or drop us a message on WhatsApp —
+    Tell us about your project or drop us a message on WhatsApp
     whichever is faster for you.
   </motion.p>
 </section>

@@ -268,7 +268,7 @@ export default function ServicesSection() {
           </div>
 
           <p className="text-xs md:text-sm leading-relaxed text-gray-400 lg:max-w-xl lg:justify-self-end lg:text-right">
-            We design, build, and secure digital products end to end — blending clean engineering with sharp visual design so every launch feels fast, polished, and protected from day one.
+            We design, build, and secure digital products end to end blending clean engineering with sharp visual design so every launch feels fast, polished, and protected from day one.
           </p>
         </div>
 

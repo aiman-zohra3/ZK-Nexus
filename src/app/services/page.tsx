@@ -72,7 +72,7 @@ const uiUxDesign = {
   number: "02",
   icon: Palette,
   title: "UI / UX Design",
-  image: "/uiux.jfif",
+  image: "/uiux.jpg",
   description:
     "We create modern, intuitive, and conversion-focused user experiences that delight users and elevate your brand.",
   signature: "Good design is the interface people forget they're using.",
@@ -164,12 +164,12 @@ export default function ServicesPage() {
 
   <div className="relative mx-auto flex  max-w-7xl flex-col items-center justify-center px-6 text-center">
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-      className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
-    >
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
+  >
       <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]">
         Services
       </span>
@@ -182,7 +182,8 @@ export default function ServicesPage() {
         viewport={{ once: true }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="text-[clamp(2.75rem,6vw,4.75rem)] font-black leading-[1.05] text-white">
+        <h1 className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white sm:mt-8 sm:leading-[0.95]"
+    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
           Digital products
           <br />
           built to <span className="text-[#00E5E5]">perform</span>.

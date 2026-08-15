@@ -58,7 +58,8 @@ export default function PrivacyPolicyPage() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9 }}
-          className="mb-4 text-sm uppercase tracking-[0.35em] text-[#00E5E5]"
+          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5
+          font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]"
         >
           Legal
         </motion.p>
@@ -70,7 +71,8 @@ export default function PrivacyPolicyPage() {
             viewport={{ once: true }}
             transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h1 className="text-6xl font-black leading-none md:text-7xl">
+            <h1 className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white  sm:leading-[0.95]"
+    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
               Privacy <span className="text-[#56a2b4]">Policy</span>
             </h1>
           </motion.div>
@@ -80,7 +82,7 @@ export default function PrivacyPolicyPage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.3 }}
-          className="mt-8 max-w-2xl text-lg leading-8 text-[#8B93A3]"
+          className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
         >
           How ZK Nexus collects, uses, and protects your information when you
           visit our website or work with us.
