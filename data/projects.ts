@@ -117,7 +117,7 @@ export const projects: Project[] = [
     category: "THREAT RESEARCH",
     stack: ["Python", "Cross-Platform", "Webhook Relay"],
     accent: "violet",
-    image: "/cryptix.jfif",
+    image: "/cryptix.jpg",
     landingLine: "Catches what a stolen password can't hide.",
     problem:
       "By the time a company notices a stolen password or an insider quietly copying files, the damage is already done. Security teams need to see keystroke-level activity to prove what happened — and catch it while it's happening.",
@@ -159,7 +159,7 @@ export const projects: Project[] = [
     category: "PRIVACY",
     stack: ["Signal Protocol", "WebSockets", "Passkeys"],
     accent: "cyan",
-    image: "/wetalk.jfif",
+    image: "/wetalk.jpg",
     landingLine: "Messages nobody in between can read.",
     problem:
       "Most chat apps promise privacy but still sit in the middle of every conversation. If their servers are ever breached, old messages can be exposed right along with new ones.",
