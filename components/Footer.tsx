@@ -195,7 +195,7 @@ function BrandBlock({ centered = false }: { centered?: boolean }) {
             alt="ZK Nexus logo"
             width={84}
             height={84}
-            className="h-14 w-14 object-contain md:h-[84px] md:w-[84px]"
+            className="h-12 w-12 object-contain md:h-[84px] md:w-[84px]"
           />
         </span>
       </Link>

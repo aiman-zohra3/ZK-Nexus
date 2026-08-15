@@ -124,13 +124,13 @@ export default function Navbar() {
         <div className="relative mx-auto flex h-12 max-w-[1400px] items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-10">
           {/* Logo */}
           <Link href="/" className="flex min-w-0 items-center gap-2.5 sm:gap-4">
-            <Image
-              src="/logo.png"
-              alt="ZK Nexus"
-              width={58}
-              height={52}
-              className="h-9 w-9 flex-shrink-0 sm:h-[58px] sm:w-[84px]"
-            />
+           <Image
+                       src="/logo.png"
+                       alt="ZK Nexus logo"
+                       width={84}
+                       height={84}
+                       className="h-14 w-14 object-contain md:h-[84px] md:w-[84px]"
+                     />
           </Link>
 
           {/* Desktop Nav */}

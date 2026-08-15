@@ -159,21 +159,21 @@ export default function ServicesPage() {
       {/* HERO SECTION */}
       {/* ====================================================== */}
 
-      <section className="relative flex items-center justify-center overflow-hidden px-6 py-32">
+      <section className="relative flex items-center justify-center overflow-hidden px-6 py-28 md:py-32">
   <div className="absolute inset-x-0 top-0 h-[300px] sm:h-[450px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
 
   <div className="relative mx-auto flex  max-w-7xl flex-col items-center justify-center px-6 text-center">
-    <motion.div
+   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true }}
     transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
+    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4"
   >
-      <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]">
-        Services
-      </span>
-    </motion.div>
+    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
+    Services
+    </span>
+  </motion.div>
 
     <div className="overflow-hidden">
       <motion.div

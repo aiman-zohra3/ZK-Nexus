@@ -53,16 +53,18 @@ export default function PrivacyPolicyPage() {
 
       {/* ================= HERO ================= */}
 
-      <section className="relative mx-auto flex min-h-[70vh] max-w-7xl flex-col items-center justify-center px-6 pt-32 text-center">
-        <motion.p
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9 }}
-          className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5
-          font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]"
-        >
-          Legal
-        </motion.p>
+      <section className="relative mx-auto flex min-h-[70vh] max-w-7xl flex-col items-center justify-center px-6 py-28 md:py-32 text-center">
+        <motion.div
+    initial={{ opacity: 0, y: 20 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    viewport={{ once: true }}
+    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4"
+  >
+    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
+    Legal
+    </span>
+  </motion.div>
 
         <div className="overflow-hidden">
           <motion.div
