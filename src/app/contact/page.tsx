@@ -329,25 +329,22 @@ const handleBlur = (
     return;
   }
 
-  // iOS — bare custom schemes work, but two things can go wrong with
-  // naive detection:
-  // 1) If Gmail IS installed, a first-launch "Open in Gmail?" prompt
-  //    can delay the real app-switch past a short timer.
-  // 2) If Gmail is NOT installed, Safari shows a native "invalid
-  //    address" alert — which also blurs the page, just like a real
-  //    app switch would. Listening to `blur` can't tell these apart,
-  //    so it wrongly cancels the fallback even when nothing opened.
-  // pagehide / visibilitychange(document.hidden) only fire on a real
-  // backgrounding event, not from an alert stealing focus, so those
-  // are the only signals we trust — at the cost of a longer timer.
+  // iOS — setting location.href directly to an unregistered custom
+  // scheme makes Safari show a top-level "invalid address" error
+  // alert instead of failing silently. Attempting the scheme inside
+  // a hidden iframe avoids that: a failed iframe navigation doesn't
+  // trigger Safari's error UI, it just fails quietly, so our mailto
+  // fallback can take over cleanly.
   const fallbackTimer = window.setTimeout(() => {
     window.location.href = `mailto:${RECIPIENT}`;
+    cleanupIframe();
   }, 1500);
 
   const cancelFallback = () => {
     window.clearTimeout(fallbackTimer);
     document.removeEventListener("visibilitychange", onHide);
     window.removeEventListener("pagehide", cancelFallback);
+    cleanupIframe();
   };
 
   const onHide = () => {
@@ -357,7 +354,22 @@ const handleBlur = (
   document.addEventListener("visibilitychange", onHide);
   window.addEventListener("pagehide", cancelFallback);
 
-  window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
+  const iframe = document.createElement("iframe");
+  iframe.style.display = "none";
+  document.body.appendChild(iframe);
+
+  const cleanupIframe = () => {
+    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+  };
+
+  try {
+    iframe.contentWindow!.location.href = `googlegmail:///co?to=${RECIPIENT}`;
+  } catch {
+    // Some iOS/Safari versions throw synchronously for disallowed
+    // schemes inside iframes — if so, skip straight to mailto.
+    cancelFallback();
+    window.location.href = `mailto:${RECIPIENT}`;
+  }
 };
 
   const handleWhatsAppClick = () => {
