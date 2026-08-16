@@ -357,9 +357,72 @@ const handleBlur = (
   window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
 };
 
-  const handleWhatsAppClick = () => {
-    window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
+  const handleMailClick = () => {
+  const RECIPIENT = "aiman@gmail.com";
+  const ua = navigator.userAgent;
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+  const isMobile = isIOS || isAndroid;
+
+  if (!isMobile) {
+    // Desktop — mail.google.com is a normal https URL, not a custom
+    // app scheme, so it always loads (shows a login screen if you're
+    // logged out). No Outlook/mailto race needed, just open it fresh.
+    window.open(
+      `https://mail.google.com/mail/?view=cm&fs=1&to=${RECIPIENT}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+    return;
+  }
+
+  if (isAndroid) {
+    // Android Chrome blocks bare custom schemes (googlegmail://) via
+    // location.href — they fail silently, so a JS-timer mailto
+    // fallback fires anyway and Android shows its app chooser even
+    // with Gmail installed. intent:// is the scheme Chrome actually
+    // honors: it launches Gmail directly, and its own
+    // S.browser_fallback_url handles "Gmail not installed" natively,
+    // no timer needed.
+    window.location.href =
+      `intent://co?to=${RECIPIENT}#Intent;` +
+      `scheme=googlegmail;` +
+      `package=com.google.android.gm;` +
+      `S.browser_fallback_url=${encodeURIComponent(`mailto:${RECIPIENT}`)};` +
+      `end`;
+    return;
+  }
+
+  // iOS — bare custom schemes work, but two things can go wrong with
+  // naive detection:
+  // 1) If Gmail IS installed, a first-launch "Open in Gmail?" prompt
+  //    can delay the real app-switch past a short timer.
+  // 2) If Gmail is NOT installed, Safari shows a native "invalid
+  //    address" alert — which also blurs the page, just like a real
+  //    app switch would. Listening to `blur` can't tell these apart,
+  //    so it wrongly cancels the fallback even when nothing opened.
+  // pagehide / visibilitychange(document.hidden) only fire on a real
+  // backgrounding event, not from an alert stealing focus, so those
+  // are the only signals we trust — at the cost of a longer timer.
+  const fallbackTimer = window.setTimeout(() => {
+    window.location.href = `mailto:${RECIPIENT}`;
+  }, 1500);
+
+  const cancelFallback = () => {
+    window.clearTimeout(fallbackTimer);
+    document.removeEventListener("visibilitychange", onHide);
+    window.removeEventListener("pagehide", cancelFallback);
   };
+
+  const onHide = () => {
+    if (document.hidden) cancelFallback();
+  };
+
+  document.addEventListener("visibilitychange", onHide);
+  window.addEventListener("pagehide", cancelFallback);
+
+  window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
+};
 
   const contactMethods = [
     {
