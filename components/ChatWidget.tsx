@@ -30,7 +30,7 @@ interface QuickReply {
 
 const QUICK_REPLIES: QuickReply[] = [
   {
-    label: "Web dev",
+    label: "Web Development",
     value: "web-dev",
     reply:
       "We build custom websites and web apps with Next.js and full-stack setups, from scratch or on existing codebases. Want a quote or to see past work?",
@@ -48,7 +48,7 @@ const QUICK_REPLIES: QuickReply[] = [
       "Pricing depends on scope, we quote per project after a quick scoping call. Want me to connect you with the team for a quote?",
   },
   {
-    label: "Talk to us",
+    label: "Contact Form",
     value: "talk",
     opensLeadForm: true,
   },

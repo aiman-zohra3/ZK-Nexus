@@ -11,15 +11,21 @@ import { sections, lastUpdated, intro, contactEmail } from "@/data/privacy";
 
 function SectionTag({ title }: { title: string }) {
   return (
-    <div className="mb-8 inline-flex items-center gap-3">
-      <div className="h-px w-12 bg-gradient-to-r from-white/40 to-white/20" />
-      <p className="font-mono text-[13px] font-semibold uppercase tracking-[0.08em] text-white/80">
-        {title}
-      </p>
-      <div className="h-px w-12 bg-gradient-to-r from-white/20 to-white/40" />
-    </div>
+    <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className={badgeClass} 
+        >
+          <span >{title}</span>
+        </motion.div>
   );
 }
+
+// Shared pill/badge style used for "Legal" + "Last Updated" so they match
+const badgeClass =
+  "inline-flex items-center gap-2 mb-7 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4 font-mono text-[10px] sm:text-xs uppercase tracking-[0.2em] text-[#00E5E5]";
 
 // ======================================================
 // PRIVACY POLICY PAGE
@@ -53,18 +59,16 @@ export default function PrivacyPolicyPage() {
 
       {/* ================= HERO ================= */}
 
-      <section className="relative mx-auto flex min-h-[70vh] max-w-7xl flex-col items-center justify-center px-6 py-28 md:py-32 text-center">
+      <section className="relative mx-auto flex  max-w-7xl flex-col items-center justify-center px-6 pt-28 pb-10 md:pt-32 md:pb-10 text-center">
         <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4"
-  >
-    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
-    Legal
-    </span>
-  </motion.div>
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className={badgeClass}
+        >
+          <span>Legal</span>
+        </motion.div>
 
         <div className="overflow-hidden">
           <motion.div
@@ -73,9 +77,11 @@ export default function PrivacyPolicyPage() {
             viewport={{ once: true }}
             transition={{ duration: 1.3, ease: [0.22, 1, 0.36, 1] }}
           >
-            <h1 className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white  sm:leading-[0.95]"
-    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
-              Privacy <span className="text-[#56a2b4]">Policy</span>
+            <h1
+              className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white sm:leading-[0.95]"
+              style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}
+            >
+              Privacy <span className="text-[#00E5E5]">Policy</span>
             </h1>
           </motion.div>
         </div>
@@ -94,22 +100,22 @@ export default function PrivacyPolicyPage() {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-5 py-2 font-mono text-xs uppercase tracking-[0.15em] text-white/60"
+          className={`mt-8 ${badgeClass} normal-case text-white/60`}
         >
           <span className="h-1.5 w-1.5 rounded-full bg-[#00E5E5]" />
-          Last Updated: {lastUpdated}
+          <span className="tracking-[0.15em]">Last Updated: {lastUpdated}</span>
         </motion.div>
       </section>
 
       {/* ================= CONTENT ================= */}
 
-      <section className="mx-auto max-w-7xl px-6 pb-32 pt-12">
-        <div className="grid gap-16 lg:grid-cols-[280px_1fr]">
+      <section className="mx-auto max-w-7xl px-6 pb-20 pt-4 md:pb-24 md:pt-12">
+        <div className="grid gap-8 lg:grid-cols-[280px_1fr] lg:gap-16">
           {/* TABLE OF CONTENTS */}
 
           <nav className="hidden lg:block">
-            <div className="sticky top-32">
-              <SectionTag title="Contents" />
+            <div className="sticky top-32 ">
+              <SectionTag  title="Contents" />
               <ul className="space-y-1 border-l border-white/10">
                 {sections.map((s) => (
                   <li key={s.id}>
@@ -144,13 +150,13 @@ export default function PrivacyPolicyPage() {
 
           {/* SECTIONS */}
 
-          <div className="space-y-24">
+          <div className="space-y-12 md:space-y-18">
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7 }}
-              className="max-w-2xl text-lg leading-8 text-[#8B93A3]"
+              className="max-w-2xl text-sm leading-6 text-[#8B93A3] sm:text-base sm:leading-8"
             >
               {intro}
             </motion.p>
@@ -163,36 +169,36 @@ export default function PrivacyPolicyPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
                 transition={{ duration: 0.6, delay: index * 0.03 }}
-                className="scroll-mt-32 border-t border-white/10 pt-12"
+                className="scroll-mt-32 border-t border-white/10 pt-8 md:pt-12"
               >
-                <div className="flex items-baseline gap-4">
-                  <span className="font-mono text-sm text-[#00E5E5]">
+                <div className="flex items-center gap-2 sm:gap-4">
+                  <span className="whitespace-nowrap font-mono text-xs text-[#00E5E5] sm:text-sm">
                     {section.number}
                   </span>
-                  <h2 className="text-3xl font-black md:text-4xl">
+                  <h2 className="text-xl font-black leading-tight sm:text-2xl md:text-4xl">
                     {section.title}
                   </h2>
                 </div>
 
-                <div className="mt-8 space-y-8">
+                <div className="mt-6 space-y-6 md:mt-8 md:space-y-8">
                   {section.content.map((block, i) => (
                     <div key={i}>
                       {block.heading && (
-                        <h3 className="mb-3 text-xl font-bold text-[#56a2b4]">
+                        <h3 className="mb-2 text-base font-bold text-[#00E5E5] sm:mb-3 sm:text-lg">
                           {block.heading}
                         </h3>
                       )}
 
-                      <p className="max-w-3xl text-base leading-8 text-[#8B93A3]">
+                      <p className="max-w-3xl text-sm leading-6 text-[#8B93A3] sm:text-base sm:leading-8">
                         {block.body}
                       </p>
 
                       {block.list.length > 0 && (
-                        <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <ul className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-2">
                           {block.list.map((item) => (
                             <li
                               key={item}
-                              className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 text-sm leading-6 text-white/80"
+                              className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-3 text-sm leading-6 text-white/80 sm:p-4"
                             >
                               <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#00E5E5]" />
                               {item}
@@ -206,14 +212,14 @@ export default function PrivacyPolicyPage() {
 
                 {/* Contact card on final section */}
                 {section.id === "contact-us" && (
-                  <div className="relative mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-10 backdrop-blur-xl">
-                    <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#2f6065]/60 blur-[100px]" />
+                  <div className="relative mt-8 overflow-hidden rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl sm:p-10">
+                    <div className="absolute left-1/2 top-1/2 h-56 w-56 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#00E5E5]/10 blur-[100px]" />
                     <div className="relative z-10 grid gap-6 sm:grid-cols-2">
                       <div>
                         <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/50">
                           Email
                         </p>
-                        <p className="mt-2 text-lg font-bold text-[#56a2b4]">
+                        <p className="mt-2 text-base font-bold text-[#00E5E5] sm:text-lg">
                           {contactEmail}
                         </p>
                       </div>
@@ -221,7 +227,7 @@ export default function PrivacyPolicyPage() {
                         <p className="font-mono text-xs uppercase tracking-[0.2em] text-white/50">
                           Contact Form
                         </p>
-                        <p className="mt-2 text-lg font-bold text-[#56a2b4]">
+                        <p className="mt-2 text-base font-bold text-[#00E5E5] sm:text-lg">
                           Available on our website
                         </p>
                       </div>

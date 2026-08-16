@@ -120,11 +120,11 @@ export default function AboutSection() {
   );
 
   return (
-    <section className="relative overflow-hidden bg-[#0B0C10] text-[#E2E8F0]">
+    <section className="relative overflow-hidden bg-[#0B0C10] text-white">
   {/* Radial Cyan Glow */}
   <div className="absolute inset-x-0 top-0 h-[300px] sm:h-[450px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
 
-  <section className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-6 py-28 md:py-32 text-center">
+  <section className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-6 pt-14 pb-12 md:py-32 text-center">
     <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -167,7 +167,7 @@ export default function AboutSection() {
   
       {/* ================= MISSION & VALUES ================= */}
 
-<section className="mx-auto max-w-7xl px-6 py-20 sm:py-28 lg:py-32">
+<section className="mx-auto max-w-7xl px-6 pb-7 lg:pb-20">
   <div className="grid gap-12 lg:gap-20 lg:grid-cols-[3fr_4fr]">
     {/* LEFT SIDE */}
     <div className="flex flex-col max-w-3xl">

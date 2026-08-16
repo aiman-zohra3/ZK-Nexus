@@ -16,6 +16,7 @@ import {
   SiFigma,
   SiOwasp,
 } from "react-icons/si";
+import { span } from "framer-motion/client";
 
 // ======================================================
 // TECHNOLOGY MARQUEE
@@ -447,9 +448,10 @@ export default function ServicesPage() {
   </h3>
   <div className="mt-3 grid grid-cols-2 gap-2 md:flex  md:items-center md:gap-8">
     {service.deliverables.map((item) => (
+      
       <span
         key={item}
-        className="rounded-2xl border border-[#00E5E5]/25 px-2 md:px-2.5 py-1.5 text-[10px] md:text-[12px] font-medium text-white/80"
+        className="rounded-2xl border text-center border-[#00E5E5]/25 px-2 md:px-2.5 py-1 text-[10px] md:text-[12px] font-medium text-white/80"
       >
         {item}
       </span>
