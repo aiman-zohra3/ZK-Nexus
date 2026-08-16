@@ -312,28 +312,47 @@ const handleBlur = (
     return;
   }
 
-  // Mobile — try the Gmail app first. If Gmail isn't installed, the
-  // custom scheme silently fails and nothing happens to the page, so
-  // after a short wait we fall back to mailto: (OS default app, e.g.
-  // Outlook). If Gmail DOES open, the page loses focus almost
-  // instantly — we catch that and cancel the fallback so mailto:
-  // never fires and only one app opens.
+  if (isAndroid) {
+    // Android Chrome blocks bare custom schemes (googlegmail://) via
+    // location.href — they fail silently, so a JS-timer mailto
+    // fallback fires anyway and Android shows its app chooser even
+    // with Gmail installed. intent:// is the scheme Chrome actually
+    // honors: it launches Gmail directly, and its own
+    // S.browser_fallback_url handles "Gmail not installed" natively,
+    // no timer needed.
+    window.location.href =
+      `intent://co?to=${RECIPIENT}#Intent;` +
+      `scheme=googlegmail;` +
+      `package=com.google.android.gm;` +
+      `S.browser_fallback_url=${encodeURIComponent(`mailto:${RECIPIENT}`)};` +
+      `end`;
+    return;
+  }
+
+  // iOS — bare custom schemes work, but the first-launch "Open in
+  // Gmail?" confirmation dialog can delay the actual app-switch past
+  // a short fallback timer, so mailto: fires early and shows Mail's
+  // chooser even with Gmail installed. Give more time, and listen for
+  // `blur` too — it tends to fire the instant the dialog appears /
+  // app switch begins, ahead of visibilitychange.
   const fallbackTimer = window.setTimeout(() => {
     window.location.href = `mailto:${RECIPIENT}`;
-  }, 700);
+  }, 1500);
 
   const cancelFallback = () => {
     window.clearTimeout(fallbackTimer);
     document.removeEventListener("visibilitychange", onHide);
     window.removeEventListener("pagehide", onHide);
+    window.removeEventListener("blur", onHide);
   };
 
   const onHide = () => {
-    if (document.hidden) cancelFallback();
+    if (document.hidden || document.hasFocus() === false) cancelFallback();
   };
 
   document.addEventListener("visibilitychange", onHide);
   window.addEventListener("pagehide", cancelFallback);
+  window.addEventListener("blur", onHide);
 
   window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
 };
