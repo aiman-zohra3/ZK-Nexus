@@ -55,256 +55,7 @@ const NODE_DATA = [
   },
 ];
 
-const HUB = { x: 186, y: 176 };
 
-function ServiceNodeGraph({ active }: { active: number }) {
-  const activeNode = NODE_DATA[active];
-
-  return (
-    <div className="flex flex-col items-center gap-6">
-      {/* Graph canvas */}
-      <div className="relative" style={{ width: 380, height: 370 }}>
-
-        {/* SVG layer: lines + data packets */}
-        <svg
-          className="absolute inset-0 pointer-events-none"
-          width={420}
-          height={400}
-          viewBox="0 0 380 370"
-        >
-          <defs>
-            {NODE_DATA.map((n, i) => (
-              <linearGradient
-                key={i}
-                id={`line-grad-${i}`}
-                x1={n.x}
-                y1={n.y}
-                x2={HUB.x}
-                y2={HUB.y}
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop offset="0%" stopColor={n.color} stopOpacity="0.15" />
-                <stop offset="50%" stopColor={n.color} stopOpacity="0.6" />
-                <stop offset="100%" stopColor={n.color} stopOpacity="0.15" />
-              </linearGradient>
-            ))}
-            {NODE_DATA.map((n, i) => (
-              <path
-                key={i}
-                id={`pkt-path-${i}`}
-                d={`M ${n.x} ${n.y} L ${HUB.x} ${HUB.y}`}
-                fill="none"
-              />
-            ))}
-          </defs>
-
-          {/* Connection lines */}
-          {NODE_DATA.map((n, i) => (
-            <line
-              key={i}
-              x1={n.x}
-              y1={n.y}
-              x2={HUB.x}
-              y2={HUB.y}
-              stroke={`url(#line-grad-${i})`}
-              strokeWidth={i === active ? 1.5 : 1}
-              strokeDasharray={i === active ? "none" : "4 6"}
-              opacity={i === active ? 1 : 0.4}
-            />
-          ))}
-
-          {/* Animated data packets — dots flowing from each node to hub */}
-          {NODE_DATA.map((n, i) => (
-            <circle
-              key={i}
-              r={i === active ? 4 : 2.5}
-              fill={n.color}
-              opacity={i === active ? 1 : 0.5}
-              style={{ filter: `drop-shadow(0 0 ${i === active ? 6 : 3}px ${n.color})` }}
-            >
-              <animateMotion
-                dur={i === active ? "1.4s" : "2.8s"}
-                repeatCount="indefinite"
-                keyPoints="0;1"
-                keyTimes="0;1"
-                calcMode="linear"
-              >
-                <mpath href={`#pkt-path-${i}`} />
-              </animateMotion>
-            </circle>
-          ))}
-
-          {/* Second offset packet on active line for density */}
-          <circle
-            r={2}
-            fill={activeNode.color}
-            opacity={0.6}
-            style={{ filter: `drop-shadow(0 0 4px ${activeNode.color})` }}
-          >
-            <animateMotion
-              dur="1.4s"
-              repeatCount="indefinite"
-              keyPoints="0;1"
-              keyTimes="0;1"
-              calcMode="linear"
-              begin="0.7s"
-            >
-              <mpath href={`#pkt-path-${active}`} />
-            </animateMotion>
-          </circle>
-        </svg>
-
-        {/* Service nodes */}
-        {NODE_DATA.map((n, i) => {
-          const Icon = n.Icon;
-          const isActive = i === active;
-          return (
-            <div
-              key={i}
-              className="absolute flex flex-col items-center"
-              style={{
-                left: n.x,
-                top: n.y,
-                transform: "translate(-50%, -50%)",
-              }}
-            >
-              {/* Outer pulse ring on active */}
-              {isActive && (
-                <motion.div
-                  className="absolute rounded-full border"
-                  style={{ borderColor: n.color, width: 72, height: 72 }}
-                  animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
-                  transition={{ duration: 1.2, repeat: Infinity, ease: "easeOut" }}
-                />
-              )}
-
-              {/* Node circle */}
-              <motion.div
-                animate={{
-                  boxShadow: isActive
-                    ? [`0 0 0px ${n.color}00`, `0 0 22px ${n.color}99`, `0 0 0px ${n.color}00`]
-                    : `0 0 8px ${n.color}33`,
-                }}
-                transition={{ duration: 1.6, repeat: Infinity, ease: "easeInOut" }}
-                className="relative flex items-center justify-center rounded-full border"
-                style={{
-                  width: 48,
-                  height: 48,
-                  background: isActive ? `${n.color}18` : "rgba(17,19,24,0.9)",
-                  borderColor: isActive ? n.color : `${n.color}44`,
-                }}
-              >
-                <Icon
-                  size={20}
-                  style={{ color: isActive ? n.color : `${n.color}99` }}
-                />
-              </motion.div>
-
-              {/* Label */}
-              <span
-                className="mt-1.5 font-mono text-[10px] tracking-wider text-center leading-tight max-w-[80px]"
-                style={{ color: isActive ? n.color : "rgba(255,255,255,0.35)" }}
-              >
-                {n.label.toUpperCase()}
-              </span>
-            </div>
-          );
-        })}
-
-        {/* Central hub */}
-        <div
-          className="absolute flex flex-col items-center"
-          style={{
-            left: HUB.x,
-            top: HUB.y,
-            transform: "translate(-50%, -50%)",
-          }}
-        >
-          {/* Outer glow ring */}
-          <motion.div
-            className="absolute rounded-full"
-            style={{ width: 96, height: 96, background: "radial-gradient(circle, rgba(0,229,229,0.3) 0%, transparent 70%)" }}
-            animate={{ opacity: [0.15, 0.35, 0.15] }}
-            transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
-          />
-          <motion.div
-            className="absolute rounded-full border border-[#00E5E5]/20"
-            style={{ width: 80, height: 80 }}
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-          />
-
-          {/* Hub body */}
-          <div
-            className="relative z-10 flex flex-col items-center justify-center rounded-full border border-[#00E5E5]/50"
-            style={{
-              width: 64,
-              height: 64,
-              background: "linear-gradient(135deg, rgba(0,229,229,0.12) 0%, rgba(99,91,255,0.12) 100%)",
-              boxShadow: "0 0 30px rgba(0,229,229,0.2), inset 0 0 20px rgba(0,229,229,0.05)",
-            }}
-          >
-            <Zap size={22} className="text-[#00E5E5]" />
-          </div>
-
-          <span className="mt-1.5 font-mono text-[10px] tracking-[0.15em] text-[#00E5E5]/70">
-            ZK NEXUS
-          </span>
-        </div>
-      </div>
-
-      {/* Active service info card */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={active}
-          initial={{ opacity: 0, y: 12, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -12, scale: 0.97 }}
-          transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-          className="w-[340px] rounded-2xl border px-6 py-4"
-          style={{
-            background: `linear-gradient(135deg, ${activeNode.color}0a 0%, rgba(17,19,24,0.9) 60%)`,
-            borderColor: `${activeNode.color}30`,
-          }}
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <span
-                className="flex h-7 w-7 items-center justify-center rounded-full"
-                style={{ background: `${activeNode.color}18` }}
-              >
-                <activeNode.Icon size={14} style={{ color: activeNode.color }} />
-              </span>
-              <span className="font-semibold text-white text-sm">{activeNode.label}</span>
-            </div>
-            <div className="text-right">
-              <p className="font-black text-white text-lg leading-none">{activeNode.stat}</p>
-              <p className="font-mono text-[10px] tracking-wider mt-0.5" style={{ color: activeNode.color }}>
-                {activeNode.statLabel.toUpperCase()}
-              </p>
-            </div>
-          </div>
-          <p className="mt-3 text-xs leading-5 text-white/50">{activeNode.description}</p>
-
-          {/* Mini live indicator */}
-          <div className="mt-3 flex items-center gap-1.5">
-            <span className="relative flex h-1.5 w-1.5">
-              <span
-                className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
-                style={{ background: activeNode.color }}
-              />
-              <span
-                className="relative inline-flex h-1.5 w-1.5 rounded-full"
-                style={{ background: activeNode.color }}
-              />
-            </span>
-            <span className="font-mono text-[10px] tracking-widest text-white/30">LIVE · ACTIVE</span>
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  );
-}
 
 
 export default function HeroMockup() {
@@ -353,10 +104,9 @@ export default function HeroMockup() {
       {/* Final Hero Section */}
 
       <motion.div style={{ opacity: mobileOpacity, scale: mobileScale, y: mobileY }} className="relative z-1 mt-0">
-<div className="relative lg:flex w-full lg:flex-1 lg:items-start lg:justify-center gap-8 overflow-hidden px-6 pt-1 pb-1 md:px-10 sm:px-12 lg:px-16 xl:px-24 lg:pb-0">
-          {/* LEFT CONTENT */}
+<div className="relative lg:flex w-full max-w-7xl mx-auto lg:flex-1 lg:items-start lg:justify-center gap-8 overflow-hidden px-6 pt-1 pb-1 md:px-10 sm:px-12 lg:px-16 xl:px-24 lg:pb-0">          {/* LEFT CONTENT */}
 
-<div className="w-full max-w-sm md:max-w-xl lg:max-w-3xl">s    <motion.div
+<div className="w-full max-w-sm md:max-w-xl lg:max-w-3xl">    <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
@@ -369,28 +119,29 @@ export default function HeroMockup() {
           </span>
         </motion.div>
 
-<h1 className="text-4xl font-black leading-[0.95] lg:text-7xl">
-                <span className="mt-10 mr-3 inline-block text-white">Build</span>
+        <h1 className="text-4xl font-black leading-[0.95] lg:text-7xl whitespace-nowrap md:whitespace-normal">
+  <span className="mt-10 mr-3 inline-block text-white">Build</span>
 
-<span className="relative inline-flex h-[1.05em] min-w-[160px] sm:min-w-[220px] md:min-w-[320px] lg:min-w-[420px] items-baseline overflow-hidden align-baseline">                <AnimatePresence mode="wait">
-                  <motion.span
-                    key={currentWord}
-                    initial={{ y: 60, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: -60, opacity: 0 }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
-                    className="inline-block"
-                    style={{ WebkitTextStroke: "1.5px #00E5E5", color: "transparent" }}
-                  >
-                    {words[currentWord]}.
-                  </motion.span>
-                </AnimatePresence>
-              </span>
+  <span className="relative inline-flex h-[1.05em] min-w-[140px] sm:min-w-[180px] md:min-w-[220px] lg:min-w-[300px] items-baseline overflow-hidden align-baseline">
+    <AnimatePresence mode="wait">
+      <motion.span
+        key={currentWord}
+        initial={{ y: 60, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: -60, opacity: 0 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="inline-block"
+        style={{ WebkitTextStroke: "1.5px #00E5E5", color: "transparent" }}
+      >
+        {words[currentWord]}.
+      </motion.span>
+    </AnimatePresence>
+  </span>
 
-              <br />
+  <br />
 
-              <span className="mt-2 block text-white">Stay Secure.</span>
-            </h1>
+  <span className="mt-2 block text-white">Stay Secure.</span>
+</h1>
 
             <p className="mt-4 md:mt-8 text-sm md:text-lg leading-6 md:leading-8 text-gray-400">
               We craft intelligent, scalable and secure digital products tailored for
@@ -434,9 +185,9 @@ export default function HeroMockup() {
 
           {/* RIGHT SIDE — ZK Proof Node Graph */}
 
-          <div className=" w-[600px] flex items-center justify-center ">
-            <Left/>
-          </div>
+          <div className="w-full w-[480px] xl:w-[600px] flex items-end justify-center">
+  <Left/>
+</div>
         </div>
       </motion.div>
     </section>
