@@ -160,7 +160,7 @@ export default function ServicesPage() {
       {/* HERO SECTION */}
       {/* ====================================================== */}
 
-      <section className="relative flex items-center justify-center overflow-hidden px-6 py-28 md:py-32">
+      <section className="relative flex items-center justify-center overflow-hidden px-6 pt-28 pb-18 md:py-32">
   <div className="absolute inset-x-0 top-0 h-[300px] sm:h-[450px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
 
   <div className="relative mx-auto flex  max-w-7xl flex-col items-center justify-center px-6 text-center">
@@ -197,7 +197,7 @@ export default function ServicesPage() {
       whileInView={{ opacity: 1 }}
       viewport={{ once: true }}
       transition={{ delay: 0.3 }}
-      className="mt-8 max-w-2xl text-base md:text-lg leading-7 md:leading-8 text-[#8B93A3] px-2"
+      className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
     >
       We design premium digital experiences, build scalable web
       applications, and secure everything we create.
@@ -205,7 +205,7 @@ export default function ServicesPage() {
 
     <Link
       href="/contact"
-      className="mt-10 inline-flex items-center gap-2 rounded-full bg-[#00E5E5] px-7 py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_-6px_rgba(0,229,229,0.6)]"
+      className="mt-7 md:mt-10 inline-flex items-center gap-2 rounded-full bg-[#00E5E5] px-4.5 py-2.5 md:px-7 md:py-3.5 text-sm font-semibold text-black transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_-6px_rgba(0,229,229,0.6)]"
     >
       Start Your Project
       <ArrowRight size={16} />
@@ -230,9 +230,9 @@ export default function ServicesPage() {
         }
       `}</style>
       <section className="border-y border-white/10 py-0 ">
-        <div className="overflow-hidden py-3 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
+        <div className="overflow-hidden py-0.5 md:py-3 [mask-image:linear-gradient(to_right,transparent,black_10%,black_90%,transparent)]">
           <div
-            className="flex w-max items-center gap-8 py-2"
+            className="flex w-max items-center gap-5  md:gap-8 py-2"
             style={{
               animation: "zk-marquee 26s linear infinite",
               animationPlayState: marqueePaused ? "paused" : "running",

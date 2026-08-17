@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 // ======================================================
@@ -27,6 +27,22 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}
 
 const CALL_NUMBER_DISPLAY = "+92 306 6357672";
 const CALL_NUMBER_TEL = "+923067563837";
+
+const RECIPIENT = "aiman@gmail.com";
+
+const MAIL_PROVIDERS = [
+  {
+    id: "gmail",
+    label: "Gmail",
+    href: `https://mail.google.com/mail/?view=cm&fs=1&to=${RECIPIENT}`,
+  },
+  
+  {
+    id: "default",
+    label: "Outlook",
+    href: `mailto:${RECIPIENT}`,
+  },
+] as const;
 
 // ======================================================
 // DEVICE DETECTION
@@ -173,6 +189,22 @@ export default function ContactPage() {
 const [nameCharWarning, setNameCharWarning] = useState(false);
 const nameWarningTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [callNotice, setCallNotice] = useState(false);
+  const [isMailMenuOpen, setIsMailMenuOpen] = useState(false);
+  const mailMenuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isMailMenuOpen) return;
+    const onClickOutside = (e: MouseEvent) => {
+      if (
+        mailMenuRef.current &&
+        !mailMenuRef.current.contains(e.target as Node)
+      ) {
+        setIsMailMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [isMailMenuOpen]);
 
 const handleChange = (
   e: React.ChangeEvent<
@@ -292,84 +324,99 @@ const handleBlur = (
       window.setTimeout(() => setCallNotice(false), 3500);
     }
   };
+// ======================================================
+// EMAIL OPENER UTILITY (generic — reusable anywhere)
+// ======================================================
 
-  const handleMailClick = () => {
-  const RECIPIENT = "aiman@gmail.com";
-  const ua = navigator.userAgent;
-  const isIOS = /iPhone|iPad|iPod/i.test(ua);
-  const isAndroid = /Android/i.test(ua);
-  const isMobile = isIOS || isAndroid;
+function openEmail(toAddress: string, subject = "", body = "") {
+  const gmailUrl = `googlegmail://co?to=${toAddress}&subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
+  const mailtoUrl = `mailto:${toAddress}?subject=${encodeURIComponent(
+    subject
+  )}&body=${encodeURIComponent(body)}`;
 
-  if (!isMobile) {
-    // Desktop — mail.google.com is a normal https URL, not a custom
-    // app scheme, so it always loads (shows a login screen if you're
-    // logged out). No Outlook/mailto race needed, just open it fresh.
-    window.open(
-      `https://mail.google.com/mail/?view=cm&fs=1&to=${RECIPIENT}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-    return;
-  }
+  let didHide = false;
 
-  if (isAndroid) {
-    // Android Chrome blocks bare custom schemes (googlegmail://) via
-    // location.href — they fail silently, so a JS-timer mailto
-    // fallback fires anyway and Android shows its app chooser even
-    // with Gmail installed. intent:// is the scheme Chrome actually
-    // honors: it launches Gmail directly, and its own
-    // S.browser_fallback_url handles "Gmail not installed" natively,
-    // no timer needed.
-    window.location.href =
-      `intent://co?to=${RECIPIENT}#Intent;` +
-      `scheme=googlegmail;` +
-      `package=com.google.android.gm;` +
-      `S.browser_fallback_url=${encodeURIComponent(`mailto:${RECIPIENT}`)};` +
-      `end`;
-    return;
-  }
-
-  // iOS — setting location.href directly to an unregistered custom
-  // scheme makes Safari show a top-level "invalid address" error
-  // alert instead of failing silently. Attempting the scheme inside
-  // a hidden iframe avoids that: a failed iframe navigation doesn't
-  // trigger Safari's error UI, it just fails quietly, so our mailto
-  // fallback can take over cleanly.
-  const fallbackTimer = window.setTimeout(() => {
-    window.location.href = `mailto:${RECIPIENT}`;
-    cleanupIframe();
-  }, 1500);
-
-  const cancelFallback = () => {
-    window.clearTimeout(fallbackTimer);
-    document.removeEventListener("visibilitychange", onHide);
-    window.removeEventListener("pagehide", cancelFallback);
-    cleanupIframe();
+  const onVisibilityChange = () => {
+    if (document.hidden) didHide = true;
   };
+  document.addEventListener("visibilitychange", onVisibilityChange);
 
-  const onHide = () => {
-    if (document.hidden) cancelFallback();
-  };
-
-  document.addEventListener("visibilitychange", onHide);
-  window.addEventListener("pagehide", cancelFallback);
-
+  // Try Gmail via hidden iframe (avoids the "Safari cannot open the page" alert)
   const iframe = document.createElement("iframe");
   iframe.style.display = "none";
+  iframe.src = gmailUrl;
   document.body.appendChild(iframe);
 
-  const cleanupIframe = () => {
-    if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+  window.setTimeout(() => {
+    document.body.removeChild(iframe);
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    if (!didHide) {
+      window.location.href = mailtoUrl; // fallback to default Mail app
+    }
+  }, 1200);
+}
+const handleMailClick1 = () => {
+  const isMobile = isMobileOrTablet();
+
+  if (!isMobile) {
+    setIsMailMenuOpen((prev) => !prev);
+    return;
+  }
+
+  openEmail(RECIPIENT);
+};
+
+  const handleMailClick2 = () => {
+    const ua = navigator.userAgent;
+    const isIOS = /iPhone|iPad|iPod/i.test(ua);
+    const isAndroid = /Android/i.test(ua);
+    const isMobile = isIOS || isAndroid;
+
+    if (!isMobile) {
+      setIsMailMenuOpen((prev) => !prev);
+      return;
+    }
+
+    // Mobile — try Gmail app first. If Gmail isn't installed, the
+    // custom scheme silently fails and nothing happens to the page, so
+    // after a short wait we fall back to mailto: (OS default app).
+    // If Gmail DOES open, the page loses focus almost instantly — we
+    // catch that and cancel the fallback so mailto: never fires.
+    const fallbackTimer = window.setTimeout(() => {
+      window.location.href = `mailto:${RECIPIENT}`;
+    }, 700);
+
+    const cancelFallback = () => {
+      window.clearTimeout(fallbackTimer);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", onHide);
+    };
+
+    const onHide = () => {
+      if (document.hidden) cancelFallback();
+    };
+
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", cancelFallback);
+
+    window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
   };
 
-  try {
-    iframe.contentWindow!.location.href = `googlegmail:///co?to=${RECIPIENT}`;
-  } catch {
-    // Some iOS/Safari versions throw synchronously for disallowed
-    // schemes inside iframes — if so, skip straight to mailto.
-    cancelFallback();
-    window.location.href = `mailto:${RECIPIENT}`;
+  const handleMailClick = () => {
+  const isMobile = isMobileOrTablet();
+
+  if (!isMobile) {
+    setIsMailMenuOpen((prev) => !prev);
+    return;
   }
+
+  // Mobile — mailto: is a registered standard scheme, so it opens
+  // whatever the user has set as their default mail app (Gmail,
+  // Outlook, Mail.app, etc.) with no permission dialog and no
+  // "invalid address" alert, unlike custom app schemes.
+  window.location.href = `mailto:${RECIPIENT}`;
 };
 
   const handleWhatsAppClick = () => {
@@ -431,7 +478,7 @@ const handleBlur = (
       {/* ================= HERO ================= */}
 
       {/* ================= HERO ================= */}
-<section className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-6 py-28 md:py-32 text-center">
+<section className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-6 pt-28 pb-16 md:py-32 text-center">
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -526,58 +573,99 @@ const handleBlur = (
               {/* ---------- CLICKABLE CONTACT CARDS ---------- */}
 
               <div className="mt-6 flex flex-col gap-4 border-t border-white/10 pt-6">
-                {contactMethods.map((method) => (
-                  <button
-                    key={method.id}
-                    type="button"
-                    onClick={method.onClick}
-                    className="
-                      group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border
-                      border-white/10 bg-white/[0.03] p-3 md:p-5 text-left
-                      transition-all duration-300
-                      hover:-translate-y-1 hover:border-[#00E5E5]/50
-                      hover:shadow-[0_0_30px_-8px_rgba(0,229,229,0.5)]
-                      focus:outline-none focus-visible:border-[#00E5E5]/50
-                    "
-                  >
-                    <div className="flex  h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E5E5]/10 transition-colors duration-300 group-hover:bg-[#00E5E5]/20">
-                      {method.icon}
-                    </div>
+                {contactMethods.map((method) => {
+                  const isMail = method.id === "mail";
 
-                    <div className="flex flex-col">
-                      <h4 className="text-md font-bold leading-tight text-white md:text-xl">
-                        {method.heading}
-                      </h4>
+                  const card = (
+                    <button
+                      key={method.id}
+                      type="button"
+                      onClick={method.onClick}
+                      className="
+                        group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border
+                        border-white/10 bg-white/[0.03] p-3 md:p-5 text-left
+                        transition-all duration-300
+                        hover:-translate-y-1 hover:border-[#00E5E5]/50
+                        hover:shadow-[0_0_30px_-8px_rgba(0,229,229,0.5)]
+                        focus:outline-none focus-visible:border-[#00E5E5]/50
+                      "
+                    >
+                      <div className="flex  h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E5E5]/10 transition-colors duration-300 group-hover:bg-[#00E5E5]/20">
+                        {method.icon}
+                      </div>
 
-                      <AnimatePresence mode="wait">
-                        {method.id === "call" && callNotice ? (
-                          <motion.p
-                            key="notice"
-                            initial={{ opacity: 0, y: -4 }}
+                      <div className="flex flex-col">
+                        <h4 className="text-md font-bold leading-tight text-white md:text-xl">
+                          {method.heading}
+                        </h4>
+
+                        <AnimatePresence mode="wait">
+                          {method.id === "call" && callNotice ? (
+                            <motion.p
+                              key="notice"
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.25 }}
+                              className="text-xs md:text-sm leading-relaxed text-[#00E5E5]"
+                            >
+                              Calling is only available on phone or tablet —
+                              try WhatsApp or email instead.
+                            </motion.p>
+                          ) : (
+                            <motion.p
+                              key="copy"
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ duration: 0.25 }}
+                              className="mt-2 text-xs md:text-sm leading-relaxed text-[#8B93A3]"
+                            >
+                              {method.copy}
+                            </motion.p>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </button>
+                  );
+
+                  if (!isMail) return card;
+
+                  // Wrap the "Email Us" card so the desktop provider
+                  // dropdown can anchor to it.
+                  return (
+                    <div key={method.id} ref={mailMenuRef} className="relative">
+                      {card}
+
+                      <AnimatePresence>
+                        {isMailMenuOpen && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.25 }}
-                            className="text-xs md:text-sm leading-relaxed text-[#00E5E5]"
+                            exit={{ opacity: 0, y: -8 }}
+                            transition={{ duration: 0.15 }}
+                            className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#0B0C10]/95 backdrop-blur-xl"
                           >
-                            Calling is only available on phone or tablet —
-                            try WhatsApp or email instead.
-                          </motion.p>
-                        ) : (
-                          <motion.p
-                            key="copy"
-                            initial={{ opacity: 0, y: -4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -4 }}
-                            transition={{ duration: 0.25 }}
-                            className="mt-2 text-xs md:text-sm leading-relaxed text-[#8B93A3]"
-                          >
-                            {method.copy}
-                          </motion.p>
+                            {MAIL_PROVIDERS.map((provider) => (
+                              <a
+                                key={provider.id}
+                                href={provider.href}
+                                target={
+                                  provider.id === "default" ? undefined : "_blank"
+                                }
+                                rel="noopener noreferrer"
+                                onClick={() => setIsMailMenuOpen(false)}
+                                className="block px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/[0.05] hover:text-[#00E5E5]"
+                              >
+                                {provider.label}
+                              </a>
+                            ))}
+                          </motion.div>
                         )}
                       </AnimatePresence>
                     </div>
-                  </button>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </motion.div>

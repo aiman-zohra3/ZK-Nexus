@@ -76,9 +76,9 @@ export default function CareersPage() {
       {/* HERO */}
       {/* HERO */}
 <section className="relative overflow-hidden bg-[#0B0C10]">
-  <div className="absolute inset-x-0 top-0 h-[300px] sm:h-[450px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
+  <div className="absolute inset-x-0 top-0 h-[300px] md:h-[400px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
 
-  <div className="relative mx-auto flex min-h-[60vh] max-w-7xl flex-col items-center justify-center px-6 py-28 md:py-32 text-center">
+  <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-20 md:py-32 text-center">
     <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
@@ -98,10 +98,16 @@ export default function CareersPage() {
         viewport={{ once: true }}
         transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="mt-4 max-w-4xl font-black uppercase leading-[1.05] text-white sm:mt-8 sm:leading-[0.95]"
+        <h1 className="hidden md:block mt-4 max-w-4xl font-black uppercase leading-[1.05] text-white sm:mt-8 sm:leading-[0.95]"
     style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
           Build the systems <br />
           that keep internet <br />
+          <span className="text-[#00E5E5]">honest.</span>
+        </h1>
+        <h1 className="block md:hidden mt-4 max-w-4xl font-black uppercase leading-[1.05] text-white sm:mt-8 sm:leading-[0.95]"
+    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
+          Build the<br /> systems 
+          that<br /> keep internet <br/>
           <span className="text-[#00E5E5]">honest.</span>
         </h1>
       </motion.div>
