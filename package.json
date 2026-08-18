@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@google/genai": "^2.16.0",
+    "@supabase/supabase-js": "^2.112.3",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.2",
     "framer-motion": "^12.43.0",

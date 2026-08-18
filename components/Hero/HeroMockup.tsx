@@ -77,12 +77,12 @@ export default function HeroMockup() {
     offset: ["start center", "end end"],
   });
 
-  const browserScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.9]);
-  const browserOpacity = useTransform(scrollYProgress, [0.65, 0.7], [1, 0]);
-  const browserY = useTransform(scrollYProgress, [0, 0.7], [0, -120]);
-  const mobileOpacity = useTransform(scrollYProgress, [0.15, 0.75], [0, 1]);
-  const mobileScale = useTransform(scrollYProgress, [0.15, 0.75], [0.8, 1]);
-  const mobileY = useTransform(scrollYProgress, [0.45, 0.75], [120, 0]);
+const browserScale = useTransform(scrollYProgress, [0, 0.9], [1, 0.9]);
+const browserOpacity = useTransform(scrollYProgress, [0.85, 0.9], [1, 0]);
+const browserY = useTransform(scrollYProgress, [0, 1], [0, -120]);
+const mobileOpacity = useTransform(scrollYProgress, [0.15, 0.95], [0, 1]);
+const mobileScale = useTransform(scrollYProgress, [0.15, 0.75], [0.8, 1]);
+const mobileY = useTransform(scrollYProgress, [0, 0.75], [120, 0]);
 
   const [active, setActive] = useState(0);
 
@@ -114,7 +114,7 @@ export default function HeroMockup() {
           className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-0 px-3 lg:px-5 py-1.5"
         >
           
-          <span className="font-mono text-[8px] md:text-xs tracking-[0.2em] text-[#00E5E5]">
+          <span className="font-mono text-[10px] md:text-xs tracking-[0.2em] text-[#00E5E5]">
             Delivering Excellence in Software Development
           </span>
         </motion.div>

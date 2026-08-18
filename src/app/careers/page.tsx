@@ -59,9 +59,9 @@ function Badge({ children }: { children: React.ReactNode }) {
       transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5"
     >
-      <span className="font-mono text-xs uppercase tracking-[0.2em] text-[#00E5E5]">
-        {children}
-      </span>
+      <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
+     {children}
+    </span>
     </motion.div>
   );
 }

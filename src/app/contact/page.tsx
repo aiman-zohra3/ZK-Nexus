@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import EmailUsModal from "@/components/EmailUsModal";
 
 // ======================================================
 // SECTION TAG
@@ -27,22 +28,6 @@ const WHATSAPP_LINK = `https://wa.me/${WHATSAPP_NUMBER}?text=${WHATSAPP_MESSAGE}
 
 const CALL_NUMBER_DISPLAY = "+92 306 6357672";
 const CALL_NUMBER_TEL = "+923067563837";
-
-const RECIPIENT = "aiman@gmail.com";
-
-const MAIL_PROVIDERS = [
-  {
-    id: "gmail",
-    label: "Gmail",
-    href: `https://mail.google.com/mail/?view=cm&fs=1&to=${RECIPIENT}`,
-  },
-  
-  {
-    id: "default",
-    label: "Outlook",
-    href: `mailto:${RECIPIENT}`,
-  },
-] as const;
 
 // ======================================================
 // DEVICE DETECTION
@@ -134,12 +119,12 @@ const validateField = (name: keyof FormState, value: string): string => {
       return "";
 
     case "message":
-  if (!value.trim()) return "Please tell us a bit about your project.";
-  if (value.trim().length < 10)
-    return "Message is a little short — a few more details would help.";
-  if (!/[a-zA-Z]/.test(value))
-    return "Message must contain some actual text, not just numbers or symbols.";
-  return "";
+      if (!value.trim()) return "Please tell us a bit about your project.";
+      if (value.trim().length < 10)
+        return "Message is a little short — a few more details would help.";
+      if (!/[a-zA-Z]/.test(value))
+        return "Message must contain some actual text, not just numbers or symbols.";
+      return "";
 
     default:
       return "";
@@ -185,28 +170,12 @@ export default function ContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
-  // Add this near your other useState declarations
-const [nameCharWarning, setNameCharWarning] = useState(false);
-const nameWarningTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [nameCharWarning, setNameCharWarning] = useState(false);
+  const nameWarningTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [callNotice, setCallNotice] = useState(false);
-  const [isMailMenuOpen, setIsMailMenuOpen] = useState(false);
-  const mailMenuRef = useRef<HTMLDivElement>(null);
+  const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
 
-  useEffect(() => {
-    if (!isMailMenuOpen) return;
-    const onClickOutside = (e: MouseEvent) => {
-      if (
-        mailMenuRef.current &&
-        !mailMenuRef.current.contains(e.target as Node)
-      ) {
-        setIsMailMenuOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [isMailMenuOpen]);
-
-const handleChange = (
+  const handleChange = (
   e: React.ChangeEvent<
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   >
@@ -219,8 +188,6 @@ const handleChange = (
   if (fieldName === "name") {
     sanitizedValue = value.replace(/[^a-zA-Z\s]/g, "");
 
-    // If the raw input had characters we just stripped out,
-    // flash the "letters only" warning briefly.
     if (sanitizedValue !== value) {
       setNameCharWarning(true);
 
@@ -257,7 +224,11 @@ const handleBlur = (
   const { name, value } = e.target;
   const fieldName = name as keyof FormState;
 
-  setTouched((prev) => ({ ...prev, [fieldName]: true }));
+  setTouched((prev) => ({
+    ...prev,
+    [fieldName]: true,
+  }));
+
   setErrors((prev) => ({
     ...prev,
     [fieldName]: validateField(fieldName, value),
@@ -268,7 +239,6 @@ const handleBlur = (
     e.preventDefault();
     setSubmitError(null);
 
-    // Validate everything, mark everything touched so errors surface
     const allErrors = validateAll(form);
     setErrors(allErrors);
     setTouched({
@@ -311,8 +281,7 @@ const handleBlur = (
     }
   };
 
-  const isFormValid =
-    Object.keys(validateAll(form)).length === 0;
+  const isFormValid = Object.keys(validateAll(form)).length === 0;
 
   // ---------- CONTACT METHOD ACTIONS ----------
 
@@ -324,100 +293,10 @@ const handleBlur = (
       window.setTimeout(() => setCallNotice(false), 3500);
     }
   };
-// ======================================================
-// EMAIL OPENER UTILITY (generic — reusable anywhere)
-// ======================================================
-
-function openEmail(toAddress: string, subject = "", body = "") {
-  const gmailUrl = `googlegmail://co?to=${toAddress}&subject=${encodeURIComponent(
-    subject
-  )}&body=${encodeURIComponent(body)}`;
-  const mailtoUrl = `mailto:${toAddress}?subject=${encodeURIComponent(
-    subject
-  )}&body=${encodeURIComponent(body)}`;
-
-  let didHide = false;
-
-  const onVisibilityChange = () => {
-    if (document.hidden) didHide = true;
-  };
-  document.addEventListener("visibilitychange", onVisibilityChange);
-
-  // Try Gmail via hidden iframe (avoids the "Safari cannot open the page" alert)
-  const iframe = document.createElement("iframe");
-  iframe.style.display = "none";
-  iframe.src = gmailUrl;
-  document.body.appendChild(iframe);
-
-  window.setTimeout(() => {
-    document.body.removeChild(iframe);
-    document.removeEventListener("visibilitychange", onVisibilityChange);
-    if (!didHide) {
-      window.location.href = mailtoUrl; // fallback to default Mail app
-    }
-  }, 1200);
-}
-const handleMailClick1 = () => {
-  const isMobile = isMobileOrTablet();
-
-  if (!isMobile) {
-    setIsMailMenuOpen((prev) => !prev);
-    return;
-  }
-
-  openEmail(RECIPIENT);
-};
-
-  const handleMailClick2 = () => {
-    const ua = navigator.userAgent;
-    const isIOS = /iPhone|iPad|iPod/i.test(ua);
-    const isAndroid = /Android/i.test(ua);
-    const isMobile = isIOS || isAndroid;
-
-    if (!isMobile) {
-      setIsMailMenuOpen((prev) => !prev);
-      return;
-    }
-
-    // Mobile — try Gmail app first. If Gmail isn't installed, the
-    // custom scheme silently fails and nothing happens to the page, so
-    // after a short wait we fall back to mailto: (OS default app).
-    // If Gmail DOES open, the page loses focus almost instantly — we
-    // catch that and cancel the fallback so mailto: never fires.
-    const fallbackTimer = window.setTimeout(() => {
-      window.location.href = `mailto:${RECIPIENT}`;
-    }, 700);
-
-    const cancelFallback = () => {
-      window.clearTimeout(fallbackTimer);
-      document.removeEventListener("visibilitychange", onHide);
-      window.removeEventListener("pagehide", onHide);
-    };
-
-    const onHide = () => {
-      if (document.hidden) cancelFallback();
-    };
-
-    document.addEventListener("visibilitychange", onHide);
-    window.addEventListener("pagehide", cancelFallback);
-
-    window.location.href = `googlegmail:///co?to=${RECIPIENT}`;
-  };
 
   const handleMailClick = () => {
-  const isMobile = isMobileOrTablet();
-
-  if (!isMobile) {
-    setIsMailMenuOpen((prev) => !prev);
-    return;
-  }
-
-  // Mobile — mailto: is a registered standard scheme, so it opens
-  // whatever the user has set as their default mail app (Gmail,
-  // Outlook, Mail.app, etc.) with no permission dialog and no
-  // "invalid address" alert, unlike custom app schemes.
-  window.location.href = `mailto:${RECIPIENT}`;
-};
+    setIsEmailModalOpen(true);
+  };
 
   const handleWhatsAppClick = () => {
     window.open(WHATSAPP_LINK, "_blank", "noopener,noreferrer");
@@ -463,7 +342,6 @@ const handleMailClick1 = () => {
 
   return (
     <section className="relative overflow-hidden bg-[#0B0C10] text-[#E2E8F0]">
-      {/* Radial Cyan Glow */}
       <div
         className="
           absolute
@@ -476,46 +354,46 @@ const handleMailClick1 = () => {
       />
 
       {/* ================= HERO ================= */}
+      <section className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-6 pt-28 pb-16 md:py-32 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4"
+        >
+          <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
+            Contact Us
+          </span>
+        </motion.div>
 
-      {/* ================= HERO ================= */}
-<section className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-6 pt-28 pb-16 md:py-32 text-center">
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-    className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3.5 py-1.5 sm:px-4"
-  >
-    <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-[#00E5E5] sm:text-xs">
-     Contact Us
-    </span>
-  </motion.div>
+        <div className="overflow-hidden">
+          <motion.div
+            initial={{ y: "100%" }}
+            whileInView={{ y: "0%" }}
+            viewport={{ once: true }}
+            transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1
+              className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white  sm:leading-[0.95]"
+              style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}
+            >
+              Let&apos;s build something <br />
+              <span className="text-[#00E5E5]">secure.</span>
+            </h1>
+          </motion.div>
+        </div>
 
-  <div className="overflow-hidden">
-    <motion.div
-      initial={{ y: "100%" }}
-      whileInView={{ y: "0%" }}
-      viewport={{ once: true }}
-      transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-    >
-      <h1 className="mt-6 max-w-4xl font-black uppercase leading-[1.05] text-white  sm:leading-[0.95]"
-    style={{ fontSize: "clamp(2rem, 6vw + 0.5rem, 3.75rem)" }}>
-        Let&apos;s build something <br />
-        <span className="text-[#00E5E5]">secure.</span>
-      </h1>
-    </motion.div>
-  </div>
-
-  <motion.p
-    initial={{ opacity: 0 }}
-    whileInView={{ opacity: 1 }}
-    viewport={{ once: true }}
-    transition={{ delay: 0.3 }}
-    className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
-  >
-    Have a project in mind or just questions? Our team responds quickly and is ready to help bring your vision to life.
-  </motion.p>
-</section>
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.3 }}
+          className="mt-5 max-w-xl text-sm leading-relaxed text-white/50 sm:mt-7 sm:text-base md:text-lg"
+        >
+          Have a project in mind or just questions? Our team responds quickly and is ready to help bring your vision to life.
+        </motion.p>
+      </section>
 
       {/* ================= CONTACT METHODS + EMAIL FORM ================= */}
 
@@ -573,104 +451,63 @@ const handleMailClick1 = () => {
               {/* ---------- CLICKABLE CONTACT CARDS ---------- */}
 
               <div className="mt-6 flex flex-col gap-4 border-t border-white/10 pt-6">
-                {contactMethods.map((method) => {
-                  const isMail = method.id === "mail";
+                {contactMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    onClick={method.onClick}
+                    className="
+                      group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border
+                      border-white/10 bg-white/[0.03] p-3 md:p-5 text-left
+                      transition-all duration-300
+                      hover:-translate-y-1 hover:border-[#00E5E5]/50
+                      hover:shadow-[0_0_30px_-8px_rgba(0,229,229,0.5)]
+                      focus:outline-none focus-visible:border-[#00E5E5]/50
+                    "
+                  >
+                    <div className="flex  h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E5E5]/10 transition-colors duration-300 group-hover:bg-[#00E5E5]/20">
+                      {method.icon}
+                    </div>
 
-                  const card = (
-                    <button
-                      key={method.id}
-                      type="button"
-                      onClick={method.onClick}
-                      className="
-                        group relative flex w-full items-start gap-4 overflow-hidden rounded-2xl border
-                        border-white/10 bg-white/[0.03] p-3 md:p-5 text-left
-                        transition-all duration-300
-                        hover:-translate-y-1 hover:border-[#00E5E5]/50
-                        hover:shadow-[0_0_30px_-8px_rgba(0,229,229,0.5)]
-                        focus:outline-none focus-visible:border-[#00E5E5]/50
-                      "
-                    >
-                      <div className="flex  h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#00E5E5]/10 transition-colors duration-300 group-hover:bg-[#00E5E5]/20">
-                        {method.icon}
-                      </div>
+                    <div className="flex flex-col">
+                      <h4 className="text-md font-bold leading-tight text-white md:text-xl">
+                        {method.heading}
+                      </h4>
 
-                      <div className="flex flex-col">
-                        <h4 className="text-md font-bold leading-tight text-white md:text-xl">
-                          {method.heading}
-                        </h4>
-
-                        <AnimatePresence mode="wait">
-                          {method.id === "call" && callNotice ? (
-                            <motion.p
-                              key="notice"
-                              initial={{ opacity: 0, y: -4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -4 }}
-                              transition={{ duration: 0.25 }}
-                              className="text-xs md:text-sm leading-relaxed text-[#00E5E5]"
-                            >
-                              Calling is only available on phone or tablet —
-                              try WhatsApp or email instead.
-                            </motion.p>
-                          ) : (
-                            <motion.p
-                              key="copy"
-                              initial={{ opacity: 0, y: -4 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              exit={{ opacity: 0, y: -4 }}
-                              transition={{ duration: 0.25 }}
-                              className="mt-2 text-xs md:text-sm leading-relaxed text-[#8B93A3]"
-                            >
-                              {method.copy}
-                            </motion.p>
-                          )}
-                        </AnimatePresence>
-                      </div>
-                    </button>
-                  );
-
-                  if (!isMail) return card;
-
-                  // Wrap the "Email Us" card so the desktop provider
-                  // dropdown can anchor to it.
-                  return (
-                    <div key={method.id} ref={mailMenuRef} className="relative">
-                      {card}
-
-                      <AnimatePresence>
-                        {isMailMenuOpen && (
-                          <motion.div
-                            initial={{ opacity: 0, y: -8 }}
+                      <AnimatePresence mode="wait">
+                        {method.id === "call" && callNotice ? (
+                          <motion.p
+                            key="notice"
+                            initial={{ opacity: 0, y: -4 }}
                             animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -8 }}
-                            transition={{ duration: 0.15 }}
-                            className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-white/10 bg-[#0B0C10]/95 backdrop-blur-xl"
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.25 }}
+                            className="text-xs md:text-sm leading-relaxed text-[#00E5E5]"
                           >
-                            {MAIL_PROVIDERS.map((provider) => (
-                              <a
-                                key={provider.id}
-                                href={provider.href}
-                                target={
-                                  provider.id === "default" ? undefined : "_blank"
-                                }
-                                rel="noopener noreferrer"
-                                onClick={() => setIsMailMenuOpen(false)}
-                                className="block px-4 py-2.5 text-sm text-white/80 transition-colors hover:bg-white/[0.05] hover:text-[#00E5E5]"
-                              >
-                                {provider.label}
-                              </a>
-                            ))}
-                          </motion.div>
+                            Calling is only available on phone or tablet —
+                            try WhatsApp or email instead.
+                          </motion.p>
+                        ) : (
+                          <motion.p
+                            key="copy"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.25 }}
+                            className="mt-2 text-xs md:text-sm leading-relaxed text-[#8B93A3]"
+                          >
+                            {method.copy}
+                          </motion.p>
                         )}
                       </AnimatePresence>
                     </div>
-                  );
-                })}
+                  </button>
+                ))}
               </div>
             </div>
           </motion.div>
 
-          {/* ---------- EMAIL FORM CARD ---------- */}
+          {/* ---------- EMAIL FORM CARD (full inquiry form) ---------- */}
 
           <motion.div
             initial={{ opacity: 0, y: 40 }}
@@ -701,28 +538,28 @@ const handleMailClick1 = () => {
               <form onSubmit={handleSubmit} noValidate className="space-y-6">
                 <div className="grid gap-6 sm:grid-cols-2">
                   <div>
-  <label htmlFor="name" className={labelClasses}>
-    Full name
-  </label>
-  <input
-    id="name"
-    name="name"
-    type="text"
-    value={form.name}
-    onChange={handleChange}
-    onBlur={handleBlur}
-    placeholder="Jane Doe"
-    className={getFieldClasses(
-      !!(touched.name && errors.name) || nameCharWarning
-    )}
-  />
-  {nameCharWarning ? (
-    <p className={errorTextClasses}>Only letters are allowed.</p>
-  ) : (
-    touched.name &&
-    errors.name && <p className={errorTextClasses}>{errors.name}</p>
-  )}
-</div>
+                    <label htmlFor="name" className={labelClasses}>
+                      Full name
+                    </label>
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={form.name}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="Jane Doe"
+                      className={getFieldClasses(
+                        !!(touched.name && errors.name) || nameCharWarning
+                      )}
+                    />
+                    {nameCharWarning ? (
+                      <p className={errorTextClasses}>Only letters are allowed.</p>
+                    ) : (
+                      touched.name &&
+                      errors.name && <p className={errorTextClasses}>{errors.name}</p>
+                    )}
+                  </div>
 
                   <div>
                     <label htmlFor="email" className={labelClasses}>
@@ -913,6 +750,11 @@ const handleMailClick1 = () => {
           </motion.div>
         </div>
       </section>
+
+      <EmailUsModal
+        isOpen={isEmailModalOpen}
+        onClose={() => setIsEmailModalOpen(false)}
+      />
     </section>
   );
 }
