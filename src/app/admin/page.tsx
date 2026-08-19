@@ -39,17 +39,31 @@ export default function AdminLoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-[#0B0C10] px-4 text-[#E2E8F0]">
       <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
         <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#00E5E5" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="#00E5E5"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-6 w-6"
+          >
             <rect x="3" y="11" width="18" height="10" rx="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
         </div>
+
         <h1 className="text-2xl font-bold text-white">Admin Access</h1>
-        <p className="mt-1 text-sm text-white/50">Enter the admin password to continue.</p>
+        <p className="mt-1 text-sm text-white/50">
+          Enter the admin password to continue.
+        </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="password" className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-white/50">
+            <label
+              htmlFor="password"
+              className="mb-2 block text-xs font-semibold uppercase tracking-[0.15em] text-white/50"
+            >
               Password
             </label>
             <input

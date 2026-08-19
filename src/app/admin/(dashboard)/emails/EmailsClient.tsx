@@ -1,9 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { EmailInquiry } from "../page";
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+import type { EmailInquiry } from "./page";
 
 const AVATAR_COLORS = [
   "#00E5E5", "#7C7CFF", "#FF7CA3", "#FFB86B", "#6BFFB8", "#FF6B6B",
@@ -34,8 +32,6 @@ function formatDate(iso: string) {
   });
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export default function EmailsClient({
   initialEmails,
 }: {
@@ -55,22 +51,27 @@ export default function EmailsClient({
     setReplyNotice(false);
 
     const target = emails.find((e) => e.id === id);
-    if (target && !target.is_read) {
-      // Optimistic update
-      setEmails((prev) =>
-        prev.map((e) => (e.id === id ? { ...e, is_read: true } : e))
-      );
-      try {
-        const res = await fetch(`/api/admin/emails/${id}/read`, {
-          method: "PATCH",
-        });
-        if (!res.ok) throw new Error();
-      } catch {
-        // Revert on failure
-        setEmails((prev) =>
-          prev.map((e) => (e.id === id ? { ...e, is_read: false } : e))
-        );
+    if (!target || target.is_read) return; // already read, nothing to do
+
+    // Optimistic update — flip to read immediately in UI
+    setEmails((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, is_read: true } : e))
+    );
+
+    try {
+      const res = await fetch(`/api/admin/emails/${id}/read`, {
+        method: "PATCH",
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error ?? "Failed");
       }
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
+      // Revert optimistic update
+      setEmails((prev) =>
+        prev.map((e) => (e.id === id ? { ...e, is_read: false } : e))
+      );
     }
   };
 
@@ -81,7 +82,6 @@ export default function EmailsClient({
 
   return (
     <div className="p-6 md:p-10">
-      {/* ── Page header ── */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-white md:text-3xl">Emails</h1>
         <p className="mt-1 text-sm text-white/50">
@@ -162,10 +162,9 @@ export default function EmailsClient({
         )}
       </div>
 
-      {/* ── Email detail modal (Gmail-style) ── */}
+      {/* ── Email detail modal ── */}
       {selectedEmail && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center px-4">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={closeEmail}
@@ -206,9 +205,7 @@ export default function EmailsClient({
             <div className="flex items-center gap-3 border-b border-white/10 px-6 py-4">
               <div
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-black"
-                style={{
-                  backgroundColor: getAvatarColor(selectedEmail.email),
-                }}
+                style={{ backgroundColor: getAvatarColor(selectedEmail.email) }}
               >
                 {getInitials(selectedEmail.name)}
               </div>
@@ -230,7 +227,7 @@ export default function EmailsClient({
               </p>
             </div>
 
-            {/* Footer — Reply */}
+            {/* Footer */}
             <div className="border-t border-white/10 px-6 py-4">
               {replyNotice && (
                 <p className="mb-3 text-xs text-[#00E5E5]">

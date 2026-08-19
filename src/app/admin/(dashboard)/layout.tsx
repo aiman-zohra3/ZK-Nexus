@@ -3,15 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-// ─── Sidebar (merged from components/admin/AdminSidebar.tsx) ──────────────────
-
 function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
   const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin/login");
+    router.push("/admin");           // ← was /admin/login
     router.refresh();
   };
 
@@ -38,7 +36,6 @@ function AdminSidebar() {
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-white/10 bg-white/[0.02] px-4 py-6">
-      {/* Brand */}
       <div className="mb-8 flex items-center gap-2 px-2">
         <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/5">
           <svg
@@ -59,7 +56,6 @@ function AdminSidebar() {
         </span>
       </div>
 
-      {/* Nav */}
       <nav className="flex-1 space-y-1">
         {navItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
@@ -80,7 +76,6 @@ function AdminSidebar() {
         })}
       </nav>
 
-      {/* Logout */}
       <button
         type="button"
         onClick={handleLogout}
@@ -104,8 +99,6 @@ function AdminSidebar() {
     </aside>
   );
 }
-
-// ─── Layout ───────────────────────────────────────────────────────────────────
 
 export default function AdminDashboardLayout({
   children,
