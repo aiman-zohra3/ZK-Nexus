@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, isAdminAuthenticated } from "@/app/lib/supabaseAdmin";
 
-export async function PATCH(
+export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -10,24 +10,25 @@ export async function PATCH(
   }
 
   try {
-    const { id } = await params; // ← await params in Next.js 15
+    const { id } = await params;
 
     if (!id) {
       return NextResponse.json({ error: "Missing id." }, { status: 400 });
     }
 
-    const { error } = await supabaseAdmin
-      .from("email_inquiries")
-      .update({ is_read: true })
-      .eq("id", id);
+    const { data, error } = await supabaseAdmin
+      .from("email_replies")
+      .select("id, message, created_at")
+      .eq("inquiry_id", id)
+      .order("created_at", { ascending: false });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ replies: data ?? [] });
   } catch (err) {
-    console.error("Read route error:", err);
-    return NextResponse.json({ error: "Failed to update." }, { status: 500 });
+    console.error("Fetch replies error:", err);
+    return NextResponse.json({ error: "Failed to fetch replies." }, { status: 500 });
   }
 }

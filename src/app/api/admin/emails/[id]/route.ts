@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin, isAdminAuthenticated } from "@/app/lib/supabaseAdmin";
 
-export async function PATCH(
+export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
@@ -18,7 +18,7 @@ export async function PATCH(
 
     const { error } = await supabaseAdmin
       .from("email_inquiries")
-      .update({ is_read: true })
+      .delete()
       .eq("id", id);
 
     if (error) {
@@ -27,7 +27,7 @@ export async function PATCH(
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("Read route error:", err);
-    return NextResponse.json({ error: "Failed to update." }, { status: 500 });
+    console.error("Delete route error:", err);
+    return NextResponse.json({ error: "Failed to delete." }, { status: 500 });
   }
 }

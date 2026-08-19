@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import nodemailer from "nodemailer";
+import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
 
 export const runtime = "nodejs";
 
@@ -22,111 +22,77 @@ export async function POST(req: NextRequest) {
     const email = formData.get("email")?.toString().trim();
     const portfolio = formData.get("portfolio")?.toString().trim() || "";
     const role = formData.get("role")?.toString().trim();
-    const department = formData.get("department")?.toString().trim();
+    const department = formData.get("department")?.toString().trim() || "";
+    const openingId = formData.get("openingId")?.toString().trim() || "";
     const resume = formData.get("resume") as File | null;
 
     // ---------- FIELD VALIDATION ----------
 
     if (!name || name.length < 2) {
-      return NextResponse.json(
-        { error: "Please provide a valid name." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please provide a valid name." }, { status: 400 });
     }
-
     if (!NAME_REGEX.test(name)) {
-      return NextResponse.json(
-        { error: "Name can only contain letters and spaces." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Name can only contain letters and spaces." }, { status: 400 });
     }
-
     if (!email || !EMAIL_REGEX.test(email)) {
-      return NextResponse.json(
-        { error: "Please provide a valid email address." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
     }
-
     if (portfolio && !URL_REGEX.test(portfolio)) {
-      return NextResponse.json(
-        { error: "Portfolio must be a valid URL." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Portfolio must be a valid URL." }, { status: 400 });
     }
-
     if (!role) {
-      return NextResponse.json(
-        { error: "Missing role information." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Missing role information." }, { status: 400 });
     }
-
     if (!resume) {
-      return NextResponse.json(
-        { error: "Resume file is required." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Resume file is required." }, { status: 400 });
     }
-
     if (resume.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        { error: "Resume file exceeds the 5MB limit." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Resume file exceeds the 5MB limit." }, { status: 400 });
+    }
+    if (!ALLOWED_TYPES.includes(resume.type)) {
+      return NextResponse.json({ error: "Resume must be a PDF or Word document." }, { status: 400 });
     }
 
-    if (!ALLOWED_TYPES.includes(resume.type)) {
-      return NextResponse.json(
-        { error: "Resume must be a PDF or Word document." },
-        { status: 400 }
-      );
-    }
+    // ---------- UPLOAD RESUME TO STORAGE ----------
 
     const resumeBuffer = Buffer.from(await resume.arrayBuffer());
+    const safeFileName = resume.name.replace(/[^a-zA-Z0-9.\-_]/g, "_");
+    const storagePath = `applications/${Date.now()}-${safeFileName}`;
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_APP_PASSWORD,
-      },
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from("resumes")
+      .upload(storagePath, resumeBuffer, {
+        contentType: resume.type,
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error("Resume upload error:", uploadError);
+      return NextResponse.json({ error: "Failed to upload resume." }, { status: 500 });
+    }
+
+    // ---------- INSERT APPLICATION ----------
+
+    const { error: insertError } = await supabaseAdmin.from("job_applications").insert({
+      opening_id: openingId || null,
+      name,
+      email,
+      portfolio: portfolio || null,
+      role,
+      department: department || null,
+      resume_path: storagePath,
+      resume_filename: resume.name,
     });
 
-    await transporter.sendMail({
-      from: `"ZK Nexus Careers" <${process.env.GMAIL_USER}>`,
-      to: process.env.GMAIL_USER,
-      replyTo: email,
-      subject: `New application: ${role} — ${name}`,
-      text: `
-Name: ${name}
-Email: ${email}
-Portfolio: ${portfolio || "N/A"}
-Role: ${role}
-Department: ${department}
-      `,
-      html: `
-        <h2>New Job Application</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Portfolio:</strong> ${portfolio || "N/A"}</p>
-        <p><strong>Role:</strong> ${role}</p>
-        <p><strong>Department:</strong> ${department}</p>
-      `,
-      attachments: [
-        {
-          filename: resume.name,
-          content: resumeBuffer,
-        },
-      ],
-    });
+    if (insertError) {
+      console.error("Application insert error:", insertError);
+      await supabaseAdmin.storage.from("resumes").remove([storagePath]);
+      return NextResponse.json({ error: "Failed to submit application." }, { status: 500 });
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Application submission error:", err);
-    return NextResponse.json(
-      { error: "Failed to submit application." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to submit application." }, { status: 500 });
   }
 }

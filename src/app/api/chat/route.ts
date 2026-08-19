@@ -3,7 +3,8 @@ import { GoogleGenAI, FunctionDeclaration } from "@google/genai";
 import { sendLeadEmail } from "@/app/lib/sendLead";
 import { chatRatelimit, getClientIp } from "@/app/lib/rateLimit";
 import { projects } from "@/data/projects";
-import { openJobs, remainingSpots } from "@/data/jobs";
+import { supabaseAdmin } from "@/app/lib/supabaseAdmin";
+import { remainingSpots, type Job } from "@/data/jobs";
 import { values, principles, team, stats, storyTexts, missionText } from "@/data/about";
 import { sections as privacySections, intro as privacyIntro, lastUpdated as privacyLastUpdated, contactEmail as privacyEmail } from "@/data/privacy";
 
@@ -56,7 +57,32 @@ function buildProjectsContext(): string {
     .join("\n\n");
 }
 
-function buildJobsContext(): string {
+async function buildJobsContext(): Promise<string> {
+  const { data, error } = await supabaseAdmin
+    .from("job_openings")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Failed to load job_openings for chat context:", error);
+    return "There are no open positions right now.";
+  }
+
+  const openJobs: Job[] = (data ?? [])
+    .map((row) => ({
+      id: row.id,
+      title: row.title,
+      dept: row.dept,
+      type: row.type,
+      location: row.location,
+      positions: row.positions,
+      filled: row.filled,
+      description: row.description ?? undefined,
+      requirements: row.requirements ?? undefined,
+      postedAt: row.posted_at ?? undefined,
+    }))
+    .filter((job) => job.filled < job.positions);
+
   if (openJobs.length === 0) {
     return "There are no open positions right now.";
   }
@@ -208,7 +234,7 @@ Projects ZK Nexus has built:
 ${buildProjectsContext()}
 
 Open positions:
-${buildJobsContext()}
+${await buildJobsContext()}
 
 About ZK Nexus:
 ${buildAboutContext()}

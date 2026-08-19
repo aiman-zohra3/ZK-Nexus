@@ -20,7 +20,7 @@ async function domainHasMailServer(email: string): Promise<boolean> {
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, message } = await req.json();
+    const { name, email, subject, message } = await req.json();
 
     // ---------- VALIDATION ----------
 
@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
     }
     if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
       return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
+    }
+    if (!subject || typeof subject !== "string" || subject.trim().length < 3) {
+      return NextResponse.json({ error: "Please provide a subject." }, { status: 400 });
     }
     if (!message || typeof message !== "string" || message.trim().length < 10) {
       return NextResponse.json(
@@ -56,6 +59,7 @@ export async function POST(req: NextRequest) {
 
     const trimmedName = name.trim();
     const trimmedEmail = email.trim();
+    const trimmedSubject = subject.trim();
     const trimmedMessage = message.trim();
 
     // ---------- SAVE TO SUPABASE (source of truth) ----------
@@ -63,6 +67,7 @@ export async function POST(req: NextRequest) {
     const { error: dbError } = await supabaseAdmin.from("email_inquiries").insert({
       name: trimmedName,
       email: trimmedEmail,
+      subject: trimmedSubject,
       message: trimmedMessage,
     });
 
@@ -74,41 +79,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // ---------- SEND EMAIL (best-effort — record is already saved) ----------
-
-    try {
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.GMAIL_USER,
-          pass: process.env.GMAIL_APP_PASSWORD,
-        },
-      });
-
-      await transporter.sendMail({
-        from: `"ZK Nexus Website" <${process.env.GMAIL_USER}>`,
-        to: process.env.GMAIL_USER,
-        replyTo: trimmedEmail,
-        subject: `New quick inquiry from ${trimmedName}`,
-        text: `
-Name: ${trimmedName}
-Email: ${trimmedEmail}
-
-Message:
-${trimmedMessage}
-        `,
-        html: `
-          <h2>New Quick Inquiry</h2>
-          <p><strong>Name:</strong> ${trimmedName}</p>
-          <p><strong>Email:</strong> ${trimmedEmail}</p>
-          <p><strong>Message:</strong></p>
-          <p>${trimmedMessage.replace(/\n/g, "<br/>")}</p>
-        `,
-      });
-    } catch (mailErr) {
-      // Don't fail the request — the inquiry is already safely stored.
-      console.error("Email send error (message was still saved):", mailErr);
-    }
+    
 
     return NextResponse.json({ success: true });
   } catch (err) {

@@ -23,12 +23,10 @@ const validBudgets = [
 async function domainHasMailServer(email: string): Promise<boolean> {
   const domain = email.split("@")[1];
   if (!domain) return false;
-
   try {
     const records = await resolveMx(domain);
     return records.length > 0;
   } catch {
-    // No MX records found, or DNS lookup failed — treat as invalid
     return false;
   }
 }
@@ -37,64 +35,36 @@ export async function POST(req: NextRequest) {
   try {
     const { name, email, company, service, budget, message } = await req.json();
 
-    // ---------- FIELD VALIDATION ----------
-
     if (!name || typeof name !== "string" || name.trim().length < 2) {
-      return NextResponse.json(
-        { error: "Please provide a valid name." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please provide a valid name." }, { status: 400 });
     }
-
     if (!NAME_REGEX.test(name.trim())) {
-      return NextResponse.json(
-        { error: "Name contains invalid characters." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Name contains invalid characters." }, { status: 400 });
     }
-
     if (!email || typeof email !== "string" || !EMAIL_REGEX.test(email.trim())) {
-      return NextResponse.json(
-        { error: "Please provide a valid email address." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please provide a valid email address." }, { status: 400 });
     }
-
     if (company && typeof company === "string" && company.trim().length > 0 && company.trim().length < 2) {
-      return NextResponse.json(
-        { error: "Company name looks too short." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Company name looks too short." }, { status: 400 });
     }
     if (!MESSAGE_HAS_LETTERS.test(message)) {
-  return NextResponse.json(
-    { error: "Message must contain some actual text, not just numbers or symbols." },
-    { status: 400 }
-  );
-}
-
+      return NextResponse.json(
+        { error: "Message must contain some actual text, not just numbers or symbols." },
+        { status: 400 }
+      );
+    }
     if (!service || !validServices.includes(service)) {
-      return NextResponse.json(
-        { error: "Please select a valid service." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please select a valid service." }, { status: 400 });
     }
-
     if (!budget || !validBudgets.includes(budget)) {
-      return NextResponse.json(
-        { error: "Please select a budget range." },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Please select a budget range." }, { status: 400 });
     }
-
     if (!message || typeof message !== "string" || message.trim().length < 10) {
       return NextResponse.json(
         { error: "Please provide a bit more detail in your message." },
         { status: 400 }
       );
     }
-
-    // ---------- EMAIL DOMAIN VERIFICATION ----------
 
     const hasMailServer = await domainHasMailServer(email.trim());
     if (!hasMailServer) {
@@ -103,8 +73,6 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
-
-    // ---------- SEND EMAIL ----------
 
     const transporter = nodemailer.createTransport({
       service: "gmail",
@@ -144,9 +112,6 @@ ${message}
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Contact form error:", err);
-    return NextResponse.json(
-      { error: "Failed to send message." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to send message." }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@
 import { useState, FormEvent } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Upload, ArrowRight, CheckCircle2 } from "lucide-react";
-import { jobs, remainingSpots, type Job } from "@/data/jobs";
+import { remainingSpots, type Job } from "@/data/jobs";
 
 const deptAccent: Record<Job["dept"], string> = {
   Engineering: "text-[#00E5E5]",
@@ -66,7 +66,7 @@ function Badge({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function CareersPage() {
+export default function CareersPageClient({ jobs }: { jobs: Job[] }) {
   const [activeRole, setActiveRole] = useState<Job | null>(null);
 
   const hasOpenRoles = jobs.length > 0;
@@ -74,8 +74,7 @@ export default function CareersPage() {
   return (
     <main className="min-h-screen w-full bg-brand-ink text-[#E2E8F0]">
       {/* HERO */}
-      {/* HERO */}
-<section className="relative overflow-hidden bg-[#0B0C10]">
+      <section className="relative overflow-hidden bg-[#0B0C10]">
   <div className="absolute inset-x-0 top-0 h-[300px] md:h-[400px] bg-[radial-gradient(circle_at_center,_rgba(0,229,229,0.18)_0%,_rgba(0,229,229,0.08)_35%,_transparent_75%)] blur-3xl" />
 
   <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-center px-6 py-20 md:py-32 text-center">
@@ -182,11 +181,23 @@ export default function CareersPage() {
                           {job.title}
                         </h3>
 
-                        <div className="mt-2 flex items-center gap-3 font-mono text-xs text-white/40">
+                                                <div className="mt-2 flex items-center gap-3 font-mono text-xs text-white/40">
                           <span>{job.type}</span>
                           <span className="h-1 w-1 rounded-full bg-white/20" />
                           <span>{job.location}</span>
                         </div>
+
+                        {job.postedAt && (
+                          <p className="mt-2 font-mono text-[10px] uppercase tracking-[0.1em] text-white/30">
+                            Posted {formatPostedDate(job.postedAt)}
+                          </p>
+                        )}
+
+                        {job.description && (
+                          <p className="mt-3 line-clamp-2 text-[#00e5e5]/70 text-sm leading-relaxed ">
+                            Requirement: {job.requirements}
+                          </p>
+                        )}
                       </div>
 
                       <button
@@ -212,6 +223,12 @@ export default function CareersPage() {
       </AnimatePresence>
     </main>
   );
+}
+
+function formatPostedDate(value: string): string {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function EmptyState() {
@@ -328,6 +345,7 @@ function ApplyModal({ role, onClose }: { role: Job; onClose: () => void }) {
       formData.append("portfolio", portfolio);
       formData.append("role", role.title);
       formData.append("department", role.dept);
+      formData.append("openingId", role.id);
       formData.append("resume", resumeFile);
 
       const res = await fetch("/api/apply", {
@@ -374,13 +392,35 @@ function ApplyModal({ role, onClose }: { role: Job; onClose: () => void }) {
 
         {!submitted ? (
           <>
-            <Badge>Apply for</Badge>
+                        <Badge>Apply for</Badge>
             <h3 className="mt-3 text-2xl font-semibold text-[#00E5E5]">{role.title}</h3>
             <p className="mt-1 text-sm text-white/40">
               {role.dept} · {role.type} · {role.location}
             </p>
+            {role.postedAt && (
+              <p className="mt-1 font-mono text-[10px] uppercase tracking-[0.1em] text-white/30">
+                Posted {formatPostedDate(role.postedAt)}
+              </p>
+            )}
 
-            <form onSubmit={handleSubmit} noValidate className="mt-8 flex flex-col gap-5">
+            {role.description && (
+              <p className="mt-4 text-sm leading-relaxed text-white/60">{role.description}</p>
+            )}
+
+            {role.requirements && role.requirements.length > 0 && (
+              <ul className="mt-4 flex flex-col gap-1.5">
+                {role.requirements.map((req, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-white/50">
+                    <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#00E5E5]" />
+                    {req}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-6 h-px w-full bg-white/10" />
+
+            <form onSubmit={handleSubmit} noValidate className="mt-6 flex flex-col gap-5">
               <Field label="Full name" error={touched.name ? fieldErrors.name : undefined}>
                 <input
                   type="text"

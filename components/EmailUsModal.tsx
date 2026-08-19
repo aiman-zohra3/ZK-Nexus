@@ -6,13 +6,14 @@ import { motion, AnimatePresence } from "framer-motion";
 type EmailForm = {
   name: string;
   email: string;
+  subject: string;
   message: string;
 };
 
 type EmailFormErrors = Partial<Record<keyof EmailForm, string>>;
 type TouchedState = Partial<Record<keyof EmailForm, boolean>>;
 
-const initialForm: EmailForm = { name: "", email: "", message: "" };
+const initialForm: EmailForm = { name: "", email: "", subject: "", message: "" };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_REGEX = /^[a-zA-Z\s'-]+$/;
@@ -29,6 +30,10 @@ const validateField = (name: keyof EmailForm, value: string): string => {
       if (!value.trim()) return "Email address is required.";
       if (!EMAIL_REGEX.test(value.trim()))
         return "Please enter a valid email address.";
+      return "";
+    case "subject":
+      if (!value.trim()) return "Subject is required.";
+      if (value.trim().length < 3) return "Subject looks too short.";
       return "";
     case "message":
       if (!value.trim()) return "Please tell us a bit about what you need.";
@@ -128,7 +133,7 @@ export default function EmailUsModal({
 
     const allErrors = validateAll(form);
     setErrors(allErrors);
-    setTouched({ name: true, email: true, message: true });
+    setTouched({ name: true, email: true, subject: true, message: true });
     if (Object.keys(allErrors).length > 0) return;
 
     setIsSubmitting(true);
@@ -179,7 +184,7 @@ export default function EmailUsModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-[#00e5e5]/70 bg-white/3 p-7 md:p-8 shadow-[0_0_60px_-15px_rgba(0,229,229,0.25)]"
+            className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border border-[#00e5e5]/70 bg-black/80 p-7 md:p-8 shadow-[0_0_60px_-15px_rgba(0,229,229,0.25)]"
           >
             <button
               type="button"
@@ -253,6 +258,21 @@ export default function EmailUsModal({
                       className={getFieldClasses(!!(touched.email && errors.email))}
                     />
                     {touched.email && errors.email && <p className={errorTextClasses}>{errors.email}</p>}
+                  </div>
+
+                  <div>
+                    <label htmlFor="em-subject" className={labelClasses}>Subject</label>
+                    <input
+                      id="em-subject"
+                      name="subject"
+                      type="text"
+                      value={form.subject}
+                      onChange={handleChange}
+                      onBlur={handleBlur}
+                      placeholder="What's this about?"
+                      className={getFieldClasses(!!(touched.subject && errors.subject))}
+                    />
+                    {touched.subject && errors.subject && <p className={errorTextClasses}>{errors.subject}</p>}
                   </div>
 
                   <div>
