@@ -3,6 +3,19 @@ import { supabaseAdmin, isAdminAuthenticated } from "@/app/lib/supabaseAdmin";
 
 const DEPTS = ["Engineering", "Security", "Design", "Operations"];
 const TYPES = ["Full-time", "Part-time", "Contract", "Internship"];
+const TITLES = [
+  "Frontend Engineer",
+  "Backend Engineer",
+  "Full-Stack Developer",
+  "DevOps Engineer",
+  "Cybersecurity Analyst",
+  "Penetration Tester",
+  "UI/UX Designer",
+  "Project Manager",
+];
+const LOCATION_REGEX = /^[a-zA-Z À-ÖØ-öø-ÿ,.\-]{2,100}$/;
+const HAS_LETTERS = /[a-zA-Z]/;
+
 
 export async function PATCH(
   req: NextRequest,
@@ -37,13 +50,12 @@ export async function PATCH(
     }
 
     // Full-edit fields — only validate/apply the ones that were actually sent.
-    if (title !== undefined) {
-      if (typeof title !== "string" || !title.trim()) {
-        return NextResponse.json({ error: "Title is required." }, { status: 400 });
+       if (title !== undefined) {
+      if (!TITLES.includes(title)) {
+        return NextResponse.json({ error: "Invalid job title." }, { status: 400 });
       }
-      updates.title = title.trim();
+      updates.title = title;
     }
-
     if (dept !== undefined) {
       if (!DEPTS.includes(dept)) {
         return NextResponse.json({ error: "Invalid department." }, { status: 400 });
@@ -62,31 +74,66 @@ export async function PATCH(
       if (typeof location !== "string" || !location.trim()) {
         return NextResponse.json({ error: "Location is required." }, { status: 400 });
       }
-      updates.location = location.trim();
+      const trimmedLocation = location.trim();
+      if (!LOCATION_REGEX.test(trimmedLocation)) {
+        return NextResponse.json({ error: "Location contains invalid characters." }, { status: 400 });
+      }
+      updates.location = trimmedLocation;
     }
 
     if (positions !== undefined) {
       const positionsNum = Number(positions);
-      if (!Number.isFinite(positionsNum) || positionsNum < 1) {
-        return NextResponse.json({ error: "Positions must be at least 1." }, { status: 400 });
+      if (!Number.isInteger(positionsNum) || positionsNum < 1) {
+        return NextResponse.json({ error: "Positions must be a whole number of at least 1." }, { status: 400 });
       }
       updates.positions = positionsNum;
     }
 
     if (filled !== undefined) {
       const filledNum = Number(filled);
-      if (!Number.isFinite(filledNum) || filledNum < 0) {
+      if (!Number.isInteger(filledNum) || filledNum < 0) {
         return NextResponse.json({ error: "Filled cannot be negative." }, { status: 400 });
       }
       updates.filled = filledNum;
     }
 
+    // Cross-check filled vs positions whenever either one is being changed in this request.
+    if (positions !== undefined || filled !== undefined) {
+      const finalPositions =
+        (updates.positions as number | undefined) ?? (positions !== undefined ? Number(positions) : undefined);
+      const finalFilled =
+        (updates.filled as number | undefined) ?? (filled !== undefined ? Number(filled) : undefined);
+
+      if (typeof finalPositions === "number" && typeof finalFilled === "number" && finalFilled > finalPositions) {
+        return NextResponse.json({ error: "Filled cannot exceed positions." }, { status: 400 });
+      }
+    }
+
     if (description !== undefined) {
-      updates.description = description?.trim() || null;
+      const trimmedDescription = typeof description === "string" ? description.trim() : "";
+      if (!trimmedDescription) {
+        return NextResponse.json({ error: "Description is required." }, { status: 400 });
+      }
+      if (trimmedDescription.length < 10) {
+        return NextResponse.json({ error: "Description should be at least 10 characters." }, { status: 400 });
+      }
+      if (!HAS_LETTERS.test(trimmedDescription)) {
+        return NextResponse.json({ error: "Description must contain actual text." }, { status: 400 });
+      }
+      updates.description = trimmedDescription;
     }
 
     if (requirements !== undefined) {
-      updates.requirements = Array.isArray(requirements) ? requirements.filter(Boolean) : [];
+      const requirementLines = Array.isArray(requirements)
+        ? requirements.map((r) => String(r).trim()).filter(Boolean)
+        : [];
+      if (requirementLines.length === 0) {
+        return NextResponse.json({ error: "At least one requirement is needed." }, { status: 400 });
+      }
+      if (requirementLines.some((line) => line.length < 3 || !HAS_LETTERS.test(line))) {
+        return NextResponse.json({ error: "Each requirement must be at least 3 characters of actual text." }, { status: 400 });
+      }
+      updates.requirements = requirementLines;
     }
 
     if (postedAt !== undefined) {

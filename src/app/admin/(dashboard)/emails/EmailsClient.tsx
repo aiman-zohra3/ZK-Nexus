@@ -60,9 +60,16 @@ export default function EmailsClient({
   const [replyError, setReplyError] = useState<string | null>(null);
   const [replySent, setReplySent] = useState(false);
 
+  // Stat-card filter (Total / Unread / Read)
+  const [statusFilter, setStatusFilter] = useState<"all" | "unread" | "read">("all");
+
   const total = emails.length;
   const unreadCount = emails.filter((e) => !e.is_read).length;
   const readCount = total - unreadCount;
+  const filteredEmails =
+    statusFilter === "all"
+      ? emails
+      : emails.filter((e) => (statusFilter === "unread" ? !e.is_read : e.is_read));
   const selectedEmail = emails.find((e) => e.id === selectedId) ?? null;
   const deleteTarget = emails.find((e) => e.id === deleteConfirmId) ?? null;
 
@@ -213,48 +220,81 @@ export default function EmailsClient({
     }
   };
 
-  return (
-    <div className="p-6 md:p-10">
-      <div className="mb-8">
+   return (
+    <div className="flex h-full flex-col p-6 md:p-10">
+      <div className="mb-8 shrink-0">
         <h1 className="text-2xl font-bold text-white md:text-3xl">Emails</h1>
         <p className="mt-1 text-sm text-white/50">
           Quick inquiries submitted through the &quot;Email Us&quot; form.
         </p>
       </div>
 
-      {/* ── Stat cards ── */}
-      <div className="mb-8 grid grid-cols-3 gap-4 ">
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
+            {/* ── Stat cards (now double as filters) ── */}
+      <div className="mb-8 grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-3">
+        <button
+          type="button"
+          onClick={() => setStatusFilter("all")}
+          className={`rounded-2xl border p-4 md:p-5 text-left transition-colors duration-200 ${
+            statusFilter === "all"
+              ? "border-white/30 bg-white/10"
+              : "border-white/10 bg-white/5 hover:bg-white/[0.07]"
+          }`}
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/40">
             Total
           </p>
           <p className="mt-2 text-xl md:text-3xl font-bold text-white">{total}</p>
-        </div>
-        <div className="rounded-2xl border border-[#00E5E5]/20 bg-[#00E5E5]/5 p-4 md:p-5">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter("unread")}
+          className={`rounded-2xl border p-4 md:p-5 text-left transition-colors duration-200 ${
+            statusFilter === "unread"
+              ? "border-[#00E5E5]/60 bg-[#00E5E5]/10"
+              : "border-[#00E5E5]/20 bg-[#00E5E5]/5 hover:bg-[#00E5E5]/[0.08]"
+          }`}
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#00E5E5]/70">
             Unread
           </p>
           <p className="mt-2 text-xl md:text-3xl font-bold text-[#00E5E5]">{unreadCount}</p>
-        </div>
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-4 md:p-5">
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setStatusFilter("read")}
+          className={`rounded-2xl border p-4 md:p-5 text-left transition-colors duration-200 ${
+            statusFilter === "read"
+              ? "border-white/30 bg-white/10"
+              : "border-white/10 bg-white/5 hover:bg-white/[0.07]"
+          }`}
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-white/40">
             Read
           </p>
           <p className="mt-2 text-xl md:text-3xl font-bold text-white/70">{readCount}</p>
-        </div>
+        </button>
       </div>
 
       {/* ── Table ── */}
-      <div className="overflow-hidden rounded-2xl border border-white/10">
+            {/* ── Table ── */}
+      <div className="min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
         {total === 0 ? (
-          <div className="flex items-center justify-center bg-white/[0.02] py-16">
+          <div className="flex h-full items-center justify-center bg-white/[0.02] py-16">
             <p className="text-white/50">No messages yet.</p>
           </div>
+        ) : filteredEmails.length === 0 ? (
+          <div className="flex h-full items-center justify-center bg-white/[0.02] py-16">
+            <p className="text-white/50">
+              No {statusFilter === "unread" ? "unread" : "read"} messages.
+            </p>
+          </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="h-full overflow-auto">
             <table className="w-full min-w-[640px] border-collapse text-left text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.03] text-xs font-semibold uppercase tracking-[0.1em] text-white/40">
+              <thead className="sticky top-0 z-10">
+                <tr className="border-b border-white/10 bg-[#111318] text-xs font-semibold uppercase tracking-[0.1em] text-white/40">
                   <th className="px-5 py-3">Name</th>
                   <th className="px-5 py-3">Email</th>
                   <th className="px-5 py-3">Subject</th>
@@ -264,7 +304,7 @@ export default function EmailsClient({
                 </tr>
               </thead>
               <tbody>
-                {emails.map((item) => {
+                {filteredEmails.map((item) => {
                   if (!item.id) return null;
                   return (
                     <tr

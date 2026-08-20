@@ -41,20 +41,37 @@ interface Application {
 const DEPTS: Department[] = ["Engineering", "Security", "Design", "Operations"];
 const TYPES: JobType[] = ["Full-time", "Part-time", "Contract", "Internship"];
 
+const TITLES = [
+  "Frontend Engineer",
+  "Backend Engineer",
+  "Full-Stack Developer",
+  "DevOps Engineer",
+  "Cybersecurity Analyst",
+  "Penetration Tester",
+  "UI/UX Designer",
+  "Project Manager",
+] as const;
+
+type JobTitle = (typeof TITLES)[number];
+
+// Letters, spaces, commas, periods, hyphens — covers "Remote", "Lahore, Pakistan", "Hybrid - NYC"
+const LOCATION_REGEX = /^[a-zA-Z À-ÖØ-öø-ÿ,.\-]{2,100}$/;
+const HAS_LETTERS = /[a-zA-Z]/;
+
 export default function CareersClient() {
   const [activeTab, setActiveTab] = useState<CareersTab>("create");
 
-  return (
-    <div className="p-4 sm:p-6 md:p-10">
-      <div className="mb-6 sm:mb-8">
+    return (
+    <div className="flex h-full flex-col p-4 sm:p-6 md:p-10">
+      <div className="mb-6 shrink-0 sm:mb-8">
         <h1 className="text-2xl font-bold text-white md:text-3xl">Careers</h1>
         <p className="mt-1 text-sm text-white/50">
           Manage job openings and review submitted CVs.
         </p>
       </div>
 
-      {/* ── Full-width, centered tab buttons ── */}
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-3 sm:flex-row sm:gap-4">
+           {/* ── Tab buttons — one row at every breakpoint ── */}
+      <div className="mx-auto flex w-full max-w-6xl shrink-0 flex-row gap-3">
         <button
           type="button"
           onClick={() => setActiveTab("create")}
@@ -80,8 +97,8 @@ export default function CareersClient() {
         </button>
       </div>
 
-      {/* ── Panel ── */}
-      <div className="mx-auto mt-8 w-full max-w-6xl">
+            {/* ── Panel ── */}
+      <div className="mx-auto mt-8 min-h-0 w-full max-w-6xl flex-1">
         {activeTab === "create" ? <CreateOpeningPanel /> : <CvsPanel />}
       </div>
     </div>
@@ -93,7 +110,7 @@ export default function CareersClient() {
 // ============================================================
 
 const emptyForm = {
-  title: "",
+  title: TITLES[0] as JobTitle,
   dept: "Engineering" as Department,
   type: "Full-time" as JobType,
   location: "Remote",
@@ -111,7 +128,7 @@ function CreateOpeningPanel() {
   // editingId === null means "create new". Otherwise we're editing that opening's id.
   const [editingId, setEditingId] = useState<string | null>(null);
 
-  const [title, setTitle] = useState(emptyForm.title);
+  const [title, setTitle] = useState<JobTitle>(emptyForm.title);
   const [dept, setDept] = useState<Department>(emptyForm.dept);
   const [type, setType] = useState<JobType>(emptyForm.type);
   const [location, setLocation] = useState(emptyForm.location);
@@ -163,7 +180,7 @@ function CreateOpeningPanel() {
 
   const startEdit = (job: Opening) => {
     setEditingId(job.id);
-    setTitle(job.title);
+    setTitle(job.title as JobTitle);
     setDept(job.dept);
     setType(job.type);
     setLocation(job.location);
@@ -214,25 +231,76 @@ function CreateOpeningPanel() {
     setError(null);
     setSuccess(false);
 
-    if (!title.trim() || !location.trim()) {
-      setError("Title and location are required.");
+    const trimmedLocation = location.trim();
+    const trimmedDescription = description.trim();
+    const requirementLines = requirements
+      .split("\n")
+      .map((r) => r.trim())
+      .filter(Boolean);
+
+    if (!TITLES.includes(title)) {
+      setError("Please select a valid job title.");
+      return;
+    }
+
+    if (!trimmedLocation) {
+      setError("Location is required.");
+      return;
+    }
+    if (!LOCATION_REGEX.test(trimmedLocation)) {
+      setError("Location contains invalid characters — letters, spaces, commas, and hyphens only.");
+      return;
+    }
+
+    const positionsNum = Number(positions);
+    const filledNum = Number(filled);
+
+    if (!Number.isInteger(positionsNum) || positionsNum < 1) {
+      setError("Positions available must be a whole number of at least 1.");
+      return;
+    }
+    if (!Number.isInteger(filledNum) || filledNum < 0) {
+      setError("Positions filled cannot be negative.");
+      return;
+    }
+    if (filledNum > positionsNum) {
+      setError("Positions filled can't exceed positions available.");
+      return;
+    }
+
+    if (!trimmedDescription) {
+      setError("Description is required.");
+      return;
+    }
+    if (trimmedDescription.length < 10) {
+      setError("Description should be at least 10 characters.");
+      return;
+    }
+    if (!HAS_LETTERS.test(trimmedDescription)) {
+      setError("Description must contain actual text, not just numbers or symbols.");
+      return;
+    }
+
+    if (requirementLines.length === 0) {
+      setError("At least one requirement is needed.");
+      return;
+    }
+    if (requirementLines.some((line) => line.length < 3 || !HAS_LETTERS.test(line))) {
+      setError("Each requirement should be at least 3 characters of actual text.");
       return;
     }
 
     setSubmitting(true);
 
     const payload = {
-      title: title.trim(),
+      title,
       dept,
       type,
-      location: location.trim(),
-      positions: Number(positions),
-      filled: Number(filled),
-      description: description.trim(),
-      requirements: requirements
-        .split("\n")
-        .map((r) => r.trim())
-        .filter(Boolean),
+      location: trimmedLocation,
+      positions: positionsNum,
+      filled: filledNum,
+      description: trimmedDescription,
+      requirements: requirementLines,
       postedAt,
     };
 
@@ -262,14 +330,15 @@ function CreateOpeningPanel() {
     }
   };
 
-   const published = openings.filter((o) => o.is_published);
+  const published = openings.filter((o) => o.is_published);
   // "Closed" = unpublished because every spot got filled (auto-closed on hire).
   // "Unpublished" = manually taken down, spots still open.
   const closed = openings.filter((o) => !o.is_published && o.filled >= o.positions);
   const unpublished = openings.filter((o) => !o.is_published && o.filled < o.positions);
 
-  return (
-    <div className="flex flex-col gap-8">
+    return (
+    <div className="flex h-full flex-col gap-8 overflow-y-auto">
+      {/* ── Form ── */}
       {/* ── Form ── */}
       <form
         onSubmit={handleSubmit}
@@ -292,13 +361,17 @@ function CreateOpeningPanel() {
 
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <FormField label="Job title" full>
-            <input
-              type="text"
+            <select
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Frontend Engineer"
+              onChange={(e) => setTitle(e.target.value as JobTitle)}
               className={inputClass}
-            />
+            >
+              {TITLES.map((t) => (
+                <option key={t} value={t} className="bg-[#111318]">
+                  {t}
+                </option>
+              ))}
+            </select>
           </FormField>
 
           <FormField label="Department">
@@ -360,7 +433,7 @@ function CreateOpeningPanel() {
             />
           </FormField>
 
-          <FormField label="Description" full>
+          <FormField label="Description *" full>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
@@ -370,7 +443,7 @@ function CreateOpeningPanel() {
             />
           </FormField>
 
-          <FormField label="Requirements (one per line)" full>
+          <FormField label="Requirements (one per line) *" full>
             <textarea
               value={requirements}
               onChange={(e) => setRequirements(e.target.value)}
@@ -440,7 +513,7 @@ function CreateOpeningPanel() {
         )}
       </div>
 
-            {/* ── Unpublished openings ── */}
+      {/* ── Unpublished openings ── */}
       <div>
         <h2 className="mb-4 text-lg font-semibold text-white">Unpublished openings</h2>
 
@@ -575,6 +648,8 @@ function CvsPanel() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "hired" | "not_hired">("all");
+  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -599,6 +674,7 @@ function CvsPanel() {
 
   const decide = async (id: string, status: "hired" | "not_hired") => {
     const previous = applications;
+    const target = applications.find((a) => a.id === id);
     setUpdatingId(id);
 
     // Optimistic update — flips the row's color and swaps buttons for text immediately.
@@ -617,7 +693,15 @@ function CvsPanel() {
         const body = await res.json().catch(() => ({}));
         console.error("Failed to update application status:", body.error);
         setApplications(previous);
+        return;
       }
+
+      const label = status === "hired" ? "Hired" : "Not Hired";
+      setConfirmMessage(
+        target ? `${target.name} marked as ${label}.` : `Marked as ${label}.`
+      );
+      // Auto-dismiss after a few seconds.
+      window.setTimeout(() => setConfirmMessage(null), 3500);
     } catch (err) {
       console.error("Failed to update application status:", err);
       setApplications(previous);
@@ -638,113 +722,183 @@ function CvsPanel() {
     );
   }
 
-  return (
-    <div className="overflow-hidden rounded-2xl border border-white/10">
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[900px] border-collapse text-left text-sm">
-          <thead>
-            <tr className="border-b border-white/10 bg-white/[0.03] text-xs font-semibold uppercase tracking-[0.1em] text-white/40">
-              <th className="px-5 py-3">Name</th>
-              <th className="px-5 py-3">Email</th>
-              <th className="px-5 py-3">Role</th>
-              <th className="px-5 py-3">Department</th>
-              <th className="px-5 py-3">Portfolio</th>
-              <th className="px-5 py-3">Resume</th>
-              <th className="px-5 py-3">Applied</th>
-              <th className="px-5 py-3 text-right">Decision</th>
-            </tr>
-          </thead>
-          <tbody>
-            {applications.map((app) => {
-              const isPending = app.status === "pending";
-              return (
-                <tr
-                  key={app.id}
-                  className={`border-b border-white/5 transition-colors duration-150 ${
-                    isPending
-                      ? "bg-[#00E5E5]/[0.06] font-semibold text-white"
-                      : "bg-transparent text-white/50"
-                  }`}
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-2">
-                      {isPending && (
-                        <span className="h-2 w-2 shrink-0 rounded-full bg-[#00E5E5]" />
-                      )}
-                      {app.name}
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-white/70">{app.email}</td>
-                  <td className="px-5 py-4">{app.role}</td>
-                  <td className="px-5 py-4 text-white/60">
-                    {app.department || <span className="text-white/30">—</span>}
-                  </td>
-                  <td className="max-w-[160px] truncate px-5 py-4">
-                    {app.portfolio ? (
-                      <a
-                        href={app.portfolio}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#00E5E5] hover:underline"
-                      >
-                        Link
-                      </a>
-                    ) : (
-                      <span className="text-white/30">—</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4">
-                    {app.resume_url ? (
-                      <a
-                        href={app.resume_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-[#00E5E5] hover:underline"
-                      >
-                        {app.resume_filename || "Download"}
-                      </a>
-                    ) : (
-                      <span className="text-white/30">Unavailable</span>
-                    )}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-white/40">
-                    {formatAppliedDate(app.created_at)}
-                  </td>
-                  <td className="whitespace-nowrap px-5 py-4 text-right">
-                    {isPending ? (
-                      <div className="flex justify-end gap-2">
-                        <button
-                          type="button"
-                          onClick={() => decide(app.id, "hired")}
-                          disabled={updatingId === app.id}
-                          className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors duration-150 hover:border-emerald-500/50 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {updatingId === app.id ? "..." : "Hired"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => decide(app.id, "not_hired")}
-                          disabled={updatingId === app.id}
-                          className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors duration-150 hover:border-red-500/50 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
-                        >
-                          {updatingId === app.id ? "..." : "Not Hired"}
-                        </button>
+  const filteredApplications =
+    statusFilter === "all"
+      ? applications
+      : applications.filter((a) => a.status === statusFilter);
+
+    return (
+    <div className="flex h-full flex-col">
+      {/* ── Confirmation toast ── */}
+      {confirmMessage && (
+        <div className="mb-4 flex shrink-0 items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400"><svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="h-4 w-4 shrink-0"
+          >
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          {confirmMessage}
+        </div>
+      )}
+
+            {/* ── Filter dropdown ── */}
+      <div className="mb-4 flex shrink-0 items-center justify-between">
+        <p className="text-xs text-white/40">
+          Showing {filteredApplications.length} of {applications.length}
+        </p>
+        <div className="relative">
+          <select
+            value={statusFilter}
+            onChange={(e) =>
+              setStatusFilter(e.target.value as "all" | "pending" | "hired" | "not_hired")
+            }
+            className="cursor-pointer appearance-none rounded-lg border border-white/15 bg-white/[0.03] py-2 pl-4 pr-9 text-sm text-white outline-none transition-colors duration-200 focus:border-[#00E5E5]/60"
+          >
+            <option value="all" className="bg-[#111318]">All statuses</option>
+            <option value="pending" className="bg-[#111318]">Pending</option>
+            <option value="hired" className="bg-[#111318]">Hired</option>
+            <option value="not_hired" className="bg-[#111318]">Not Hired</option>
+          </select>
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </div>
+      </div>
+
+           <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
+        <div className="h-full overflow-auto">
+          <table className="w-full min-w-[900px] border-collapse text-left text-sm">
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b border-white/10 bg-[#111318] text-xs font-semibold uppercase tracking-[0.1em] text-white/40"><th className="px-5 py-3">Name</th>
+                <th className="px-5 py-3">Email</th>
+                <th className="px-5 py-3">Role</th>
+                <th className="px-5 py-3">Department</th>
+                <th className="px-5 py-3">Portfolio</th>
+                <th className="px-5 py-3">Resume</th>
+                <th className="px-5 py-3">Applied</th>
+                <th className="px-5 py-3 text-right">Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredApplications.map((app) => {
+                const isPending = app.status === "pending";
+                return (
+                  <tr
+                    key={app.id}
+                    className={`border-b border-white/5 transition-colors duration-150 ${
+                      isPending
+                        ? "bg-[#00E5E5]/[0.06] font-semibold text-white"
+                        : "bg-transparent text-white/50"
+                    }`}
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2">
+                        {isPending && (
+                          <span className="h-2 w-2 shrink-0 rounded-full bg-[#00E5E5]" />
+                        )}
+                        {app.name}
                       </div>
-                    ) : (
-                      <span
-                        className={`text-xs font-semibold uppercase tracking-[0.1em] ${
-                          app.status === "hired" ? "text-emerald-400" : "text-red-400"
-                        }`}
-                      >
-                        {app.status === "hired" ? "Hired" : "Not Hired"}
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td className="px-5 py-4 text-white/70">{app.email}</td>
+                    <td className="px-5 py-4">{app.role}</td>
+                    <td className="px-5 py-4 text-white/60">
+                      {app.department || <span className="text-white/30">—</span>}
+                    </td>
+                    <td className="max-w-[160px] truncate px-5 py-4">
+                      {app.portfolio ? (
+                        <a
+                          href={app.portfolio}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#00E5E5] hover:underline"
+                        >
+                          Link
+                        </a>
+                      ) : (
+                        <span className="text-white/30">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {app.resume_url ? (
+                        <a
+                          href={app.resume_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#00E5E5] hover:underline"
+                        >
+                          {app.resume_filename || "Download"}
+                        </a>
+                      ) : (
+                        <span className="text-white/30">Unavailable</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-white/40">
+                      {formatAppliedDate(app.created_at)}
+                    </td>
+                    <td className="whitespace-nowrap px-5 py-4 text-right">
+                      {isPending ? (
+                        <div className="flex justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => decide(app.id, "hired")}
+                            disabled={updatingId === app.id}
+                            className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition-colors duration-150 hover:border-emerald-500/50 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {updatingId === app.id ? "..." : "Hired"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => decide(app.id, "not_hired")}
+                            disabled={updatingId === app.id}
+                            className="rounded-full border border-white/10 px-3 py-1.5 text-xs font-semibold text-red-600 transition-colors duration-150 hover:border-red-500/50 hover:text-red-400 disabled:cursor-not-allowed disabled:opacity-40"
+                          >
+                            {updatingId === app.id ? "..." : "Not Hired"}
+                          </button>
+                        </div>
+                      ) : (
+                        <span
+                          className={`text-xs font-semibold uppercase tracking-[0.1em] ${
+                            app.status === "hired" ? "text-emerald-400" : "text-red-400"
+                          }`}
+                        >
+                          {app.status === "hired" ? "Hired" : "Not Hired"}
+                        </span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Right-edge fade + swipe hint — mobile only, hints there's more to scroll */}
+        <div className="pointer-events-none absolute right-0 top-0 flex h-full w-10 items-center justify-end bg-gradient-to-l from-[#0B0C10] to-transparent md:hidden">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-1 h-4 w-4 animate-pulse text-white/40"
+          >
+            <path d="m9 6 6 6-6 6" />
+          </svg>
+        </div>
       </div>
     </div>
   );

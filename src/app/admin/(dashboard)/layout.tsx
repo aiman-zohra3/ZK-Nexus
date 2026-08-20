@@ -14,9 +14,9 @@ function AdminSidebar({
   const pathname = usePathname();
   const router = useRouter();
 
-  const handleLogout = async () => {
+    const handleLogout = async () => {
     await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin");
+    router.push("/admin/xyz-zk");
     router.refresh();
   };
 
@@ -219,12 +219,12 @@ export default function AdminDashboardLayout({
   }, [isSidebarOpen]);
 
   return (
-    <div className="flex min-h-screen bg-[#0B0C10] text-[#E2E8F0] md:flex-row">
+        <div className="flex h-screen overflow-hidden bg-[#0B0C10] text-[#E2E8F0] md:flex-row">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <MobileTopBar onOpenMenu={() => setSidebarOpen(true)} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-hidden">{children}</main>
       </div>
     </div>
   );
