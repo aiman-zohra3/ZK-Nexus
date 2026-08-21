@@ -114,7 +114,7 @@ const mobileY = useTransform(scrollYProgress, [0, 0.75], [120, 0]);
           className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-0 px-3 lg:px-5 py-1.5"
         >
           
-          <span className="font-mono text-[10px] md:text-xs tracking-[0.2em] text-[#00E5E5]">
+          <span className="font-mono text-[8.5px] md:text-xs tracking-[0.2em] text-[#00E5E5]">
             Delivering Excellence in Software Development
           </span>
         </motion.div>

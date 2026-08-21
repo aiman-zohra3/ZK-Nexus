@@ -813,10 +813,10 @@ function MobileWebScreen() {
       className="space-y-3.5"
     >
       <div className="rounded-2xl border border-white/10 bg-[#111318] p-3.5">
-        <p className="mb-2.5 font-mono text-[10px] uppercase tracking-widest text-white/40">
+        <p className="mb-1 font-mono text-[10px] uppercase tracking-widest text-white/40">
           Pipeline
         </p>
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {webSteps.map((step, i) => {
             const Icon = step.icon;
             return (
@@ -952,16 +952,8 @@ function MobileUiScreen() {
                     transition={{ duration: 0.35 }}
                     className="relative flex items-center justify-between border-b border-white/10 px-3 py-2"
                   >
-                    {step === 0 && (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="absolute -top-1 left-3 rounded-full bg-[#00E5E5] px-1.5 py-0.5 font-mono text-[8px] font-semibold text-black"
-                      >
-                        Navbar
-                      </motion.span>
-                    )}
-                    <div className="h-2 w-10 rounded-full bg-[#00E5E5]" />
+                    
+                    <div className="h-4 w-17 px-2 rounded-full bg-[#00E5E5] text-black text-xs" >Navbar</div>
                     <div className="flex gap-1.5">
                       <div className="h-1.5 w-5 rounded-full bg-white/10" />
                       <div className="h-1.5 w-5 rounded-full bg-white/10" />
@@ -980,16 +972,9 @@ function MobileUiScreen() {
                       transition={{ duration: 0.35 }}
                       className="relative"
                     >
-                      {step === 1 && (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#00E5E5] px-1.5 py-0.5 font-mono text-[8px] font-semibold text-black"
-                        >
-                          Hero Section
-                        </motion.span>
-                      )}
-                      <div className="mx-auto h-2.5 w-32 rounded-full bg-white" />
+                      
+                    <div className="mx-auto h-3.5 w-52 rounded-full bg-white text-xs text-black font-bold" >Hero Section</div>
+
                       <div className="mx-auto mt-2 h-1.5 w-40 rounded-full bg-white/20" />
                       <div className="mx-auto mt-1 h-1.5 w-28 rounded-full bg-white/20" />
                     </motion.div>
@@ -1005,16 +990,8 @@ function MobileUiScreen() {
                       transition={{ duration: 0.3 }}
                       className="relative mx-auto mt-3 w-fit"
                     >
-                      {step === 2 && (
-                        <motion.span
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          className="absolute -top-5 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-[#00E5E5] px-1.5 py-0.5 font-mono text-[8px] font-semibold text-black"
-                        >
-                          CTA Button
-                        </motion.span>
-                      )}
-                      <div className="h-5 w-20 rounded-md bg-[#00E5E5]" />
+                    <div className="h-7 w-28 rounded-lg bg-[#00E5E5] text-xs py-1 text-black " >CTA Button</div>
+
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1194,7 +1171,7 @@ function MobileSecurityScreen() {
       <motion.div
         animate={{ boxShadow: ["0 0 0px rgba(0,229,229,0)", "0 0 18px rgba(0,229,229,0.15)", "0 0 0px rgba(0,229,229,0)"] }}
         transition={{ duration: 3, repeat: Infinity }}
-        className="rounded-2xl border border-[#00E5E5]/20 bg-[#00E5E5]/5 p-4"
+        className="rounded-2xl border border-[#00E5E5]/20 bg-[#00E5E5]/5 px-4 py-2"
       >
         <p className="text-[13px] font-sm text-white/70">Security Score</p>
         <h2 className="mt-1 text-xl font-black text-white">99.9%</h2>
