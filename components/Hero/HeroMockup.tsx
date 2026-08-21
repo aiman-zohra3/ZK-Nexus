@@ -120,7 +120,7 @@ const mobileY = useTransform(scrollYProgress, [0, 0.75], [120, 0]);
         </motion.div>
 
         <h1 className="text-4xl font-black leading-[0.95] lg:text-7xl whitespace-nowrap md:whitespace-normal">
-  <span className="mt-10 mr-3 inline-block text-white">Build</span>
+  <span className="mt-5 md:mt-7 mr-3 inline-block text-white">Build</span>
 
   <span className="relative inline-flex h-[1.05em] min-w-[140px] sm:min-w-[180px] md:min-w-[220px] lg:min-w-[300px] items-baseline overflow-hidden align-baseline">
     <AnimatePresence mode="wait">
