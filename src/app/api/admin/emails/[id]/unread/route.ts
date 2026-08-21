@@ -3,17 +3,19 @@ import { supabaseAdmin, isAdminAuthenticated } from "@/app/lib/supabaseAdmin";
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   if (!isAdminAuthenticated(req)) {
     return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   try {
+    const { id } = await params; // ← await params in Next.js 15
+
     const { error } = await supabaseAdmin
       .from("email_inquiries")
       .update({ is_read: false })
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
