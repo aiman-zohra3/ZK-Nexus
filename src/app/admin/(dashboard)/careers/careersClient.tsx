@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 type CareersTab = "create" | "cvs";
 
@@ -58,11 +58,100 @@ type JobTitle = (typeof TITLES)[number];
 const LOCATION_REGEX = /^[a-zA-Z À-ÖØ-öø-ÿ,.\-]{2,100}$/;
 const HAS_LETTERS = /[a-zA-Z]/;
 
+// ============================================================
+// SHARED TOAST SYSTEM — top-right stack, used by every panel
+// ============================================================
+
+type ToastType = "error" | "success";
+interface Toast {
+  id: string;
+  message: string;
+  type: ToastType;
+}
+type PushToast = (message: string, type?: ToastType) => void;
+
+function ToastStack({
+  toasts,
+  onDismiss,
+}: {
+  toasts: Toast[];
+  onDismiss: (id: string) => void;
+}) {
+  if (toasts.length === 0) return null;
+
+  return (
+    <div className="fixed right-4 top-4 z-[200] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-2 sm:right-6 sm:top-6">
+      {toasts.map((toast) => (
+        <div
+          key={toast.id}
+          className={`flex items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-2xl backdrop-blur-sm ${
+            toast.type === "error"
+              ? "border-red-500/20 bg-[#1a0f0f]/95 text-red-400"
+              : "border-emerald-500/20 bg-[#0f1a15]/95 text-emerald-400"
+          }`}
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mt-0.5 h-4 w-4 shrink-0"
+          >
+            {toast.type === "error" ? (
+              <>
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 8v4" />
+                <path d="M12 16h.01" />
+              </>
+            ) : (
+              <path d="M20 6 9 17l-5-5" />
+            )}
+          </svg>
+          <span className="flex-1">{toast.message}</span>
+          <button
+            type="button"
+            onClick={() => onDismiss(toast.id)}
+            aria-label="Dismiss"
+            className="shrink-0 opacity-60 hover:opacity-100"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" className="h-4 w-4">
+              <path d="M18 6 6 18" />
+              <path d="M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function CareersClient() {
   const [activeTab, setActiveTab] = useState<CareersTab>("create");
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-    return (
+    const pushToast: PushToast = (message, type = "error") => {
+    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    setToasts((prev) => {
+      // If this exact message is already showing, drop the old one so the new
+      // one takes its place (and gets a fresh 5s timer) instead of stacking a duplicate.
+      const withoutDuplicate = prev.filter((t) => t.message !== message);
+      return [...withoutDuplicate, { id, message, type }];
+    });
+    window.setTimeout(() => {
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, 5000);
+  };
+
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  };
+
+  return (
     <div className="flex h-full flex-col p-4 sm:p-6 md:p-10">
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+
       <div className="mb-6 shrink-0 sm:mb-8">
         <h1 className="text-2xl font-bold text-white md:text-3xl">Careers</h1>
         <p className="mt-1 text-sm text-white/50">
@@ -70,7 +159,7 @@ export default function CareersClient() {
         </p>
       </div>
 
-           {/* ── Tab buttons — one row at every breakpoint ── */}
+      {/* ── Tab buttons — one row at every breakpoint ── */}
       <div className="mx-auto flex w-full max-w-6xl shrink-0 flex-row gap-3">
         <button
           type="button"
@@ -97,9 +186,13 @@ export default function CareersClient() {
         </button>
       </div>
 
-            {/* ── Panel ── */}
+      {/* ── Panel ── */}
       <div className="mx-auto mt-8 min-h-0 w-full max-w-6xl flex-1">
-        {activeTab === "create" ? <CreateOpeningPanel /> : <CvsPanel />}
+        {activeTab === "create" ? (
+          <CreateOpeningPanel pushToast={pushToast} />
+        ) : (
+          <CvsPanel pushToast={pushToast} />
+        )}
       </div>
     </div>
   );
@@ -121,9 +214,10 @@ const emptyForm = {
   postedAt: new Date().toISOString().slice(0, 10),
 };
 
-function CreateOpeningPanel() {
+function CreateOpeningPanel({ pushToast }: { pushToast: PushToast }) {
   const [openings, setOpenings] = useState<Opening[]>([]);
   const [loadingList, setLoadingList] = useState(true);
+  const formRef = useRef<HTMLFormElement>(null);
 
   // editingId === null means "create new". Otherwise we're editing that opening's id.
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -139,8 +233,6 @@ function CreateOpeningPanel() {
   const [postedAt, setPostedAt] = useState(emptyForm.postedAt);
 
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
 
   // Tracks which opening (if any) currently has an unpublish/publish request in flight,
   // so we can disable just that card's button instead of the whole list.
@@ -189,19 +281,29 @@ function CreateOpeningPanel() {
     setDescription(job.description ?? "");
     setRequirements((job.requirements ?? []).join("\n"));
     setPostedAt(job.posted_at ? job.posted_at.slice(0, 10) : new Date().toISOString().slice(0, 10));
-    setError(null);
-    setSuccess(false);
-    // Scroll the form into view since the card being edited may be far below it.
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    // Scroll the form into view — uses scrollIntoView (not window.scrollTo) since the
+    // form lives inside its own overflow-y-auto container, not the page itself.
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   const cancelEdit = () => {
     resetForm();
-    setError(null);
-    setSuccess(false);
   };
 
   const handleTogglePublish = async (job: Opening) => {
+    // Guard: can't republish an opening with zero spots left — the admin
+    // needs to raise positions or lower filled first.
+    if (!job.is_published) {
+      const availableSpots = job.positions - job.filled;
+      if (availableSpots <= 0) {
+        pushToast(
+          `"${job.title}" has 0 spots available. Increase positions before publishing.`,
+          "error"
+        );
+        return;
+      }
+    }
+
     setTogglingId(job.id);
     try {
       const res = await fetch(`/api/admin/careers/openings/${job.id}`, {
@@ -220,6 +322,8 @@ function CreateOpeningPanel() {
 
       fetchOpenings();
     } catch (err) {
+      const message = err instanceof Error ? err.message : "Failed to update opening.";
+      pushToast(message, "error");
       console.error("Failed to toggle publish state:", err);
     } finally {
       setTogglingId(null);
@@ -228,8 +332,6 @@ function CreateOpeningPanel() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
 
     const trimmedLocation = location.trim();
     const trimmedDescription = description.trim();
@@ -239,16 +341,16 @@ function CreateOpeningPanel() {
       .filter(Boolean);
 
     if (!TITLES.includes(title)) {
-      setError("Please select a valid job title.");
+      pushToast("Please select a valid job title.", "error");
       return;
     }
 
     if (!trimmedLocation) {
-      setError("Location is required.");
+      pushToast("Location is required.", "error");
       return;
     }
     if (!LOCATION_REGEX.test(trimmedLocation)) {
-      setError("Location contains invalid characters — letters, spaces, commas, and hyphens only.");
+      pushToast("Location contains invalid characters — letters, spaces, commas, and hyphens only.", "error");
       return;
     }
 
@@ -256,37 +358,37 @@ function CreateOpeningPanel() {
     const filledNum = Number(filled);
 
     if (!Number.isInteger(positionsNum) || positionsNum < 1) {
-      setError("Positions available must be a whole number of at least 1.");
+      pushToast("Positions available must be a whole number of at least 1.", "error");
       return;
     }
     if (!Number.isInteger(filledNum) || filledNum < 0) {
-      setError("Positions filled cannot be negative.");
+      pushToast("Positions filled cannot be negative.", "error");
       return;
     }
     if (filledNum > positionsNum) {
-      setError("Positions filled can't exceed positions available.");
+      pushToast("Positions filled can't exceed positions available.", "error");
       return;
     }
 
     if (!trimmedDescription) {
-      setError("Description is required.");
+      pushToast("Description is required.", "error");
       return;
     }
     if (trimmedDescription.length < 10) {
-      setError("Description should be at least 10 characters.");
+      pushToast("Description should be at least 10 characters.", "error");
       return;
     }
     if (!HAS_LETTERS.test(trimmedDescription)) {
-      setError("Description must contain actual text, not just numbers or symbols.");
+      pushToast("Description must contain actual text, not just numbers or symbols.", "error");
       return;
     }
 
     if (requirementLines.length === 0) {
-      setError("At least one requirement is needed.");
+      pushToast("At least one requirement is needed.", "error");
       return;
     }
     if (requirementLines.some((line) => line.length < 3 || !HAS_LETTERS.test(line))) {
-      setError("Each requirement should be at least 3 characters of actual text.");
+      pushToast("Each requirement should be at least 3 characters of actual text.", "error");
       return;
     }
 
@@ -320,27 +422,24 @@ function CreateOpeningPanel() {
         throw new Error(body.error || "Failed to save opening.");
       }
 
-      setSuccess(true);
+      pushToast(editingId ? "Changes saved." : "Opening published.", "success");
       resetForm();
       fetchOpenings();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      pushToast(err instanceof Error ? err.message : "Something went wrong.", "error");
     } finally {
       setSubmitting(false);
     }
   };
 
   const published = openings.filter((o) => o.is_published);
-  // "Closed" = unpublished because every spot got filled (auto-closed on hire).
-  // "Unpublished" = manually taken down, spots still open.
-  const closed = openings.filter((o) => !o.is_published && o.filled >= o.positions);
-  const unpublished = openings.filter((o) => !o.is_published && o.filled < o.positions);
+  const unpublished = openings.filter((o) => !o.is_published);
 
-    return (
-    <div className="flex h-full flex-col gap-8 overflow-y-auto">
-      {/* ── Form ── */}
+  return (
+    <div className="flex h-full flex-col gap-8 overflow-y-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 hover:[&::-webkit-scrollbar-thumb]:bg-white/25">
       {/* ── Form ── */}
       <form
+        ref={formRef}
         onSubmit={handleSubmit}
         className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-8"
       >
@@ -454,13 +553,6 @@ function CreateOpeningPanel() {
           </FormField>
         </div>
 
-        {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
-        {success && (
-          <p className="mt-4 text-sm text-[#00E5E5]">
-            {editingId ? "Changes saved." : "Opening published."}
-          </p>
-        )}
-
         <div className="mt-6 flex flex-col-reverse justify-center gap-3 sm:flex-row sm:justify-end">
           {editingId && (
             <button
@@ -526,36 +618,6 @@ function CreateOpeningPanel() {
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {unpublished.map((job) => (
-              <OpeningCard
-                key={job.id}
-                job={job}
-                isToggling={togglingId === job.id}
-                onEdit={() => startEdit(job)}
-                onTogglePublish={() => handleTogglePublish(job)}
-                toggleLabel="Publish"
-                dimmed
-              />
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* ── Closed openings (auto-closed once every spot was filled) ── */}
-      <div>
-        <h2 className="mb-4 text-lg font-semibold text-white">Closed</h2>
-        <p className="-mt-3 mb-4 text-xs text-white/30">
-          All spots filled — these were unpublished automatically.
-        </p>
-
-        {loadingList ? (
-          <p className="text-sm text-white/40">Loading...</p>
-        ) : closed.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/15 bg-white/[0.02] px-6 py-12 text-center text-white/50">
-            No closed openings yet.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {closed.map((job) => (
               <OpeningCard
                 key={job.id}
                 job={job}
@@ -636,6 +698,82 @@ function OpeningCard({
 // CVs / APPLICATIONS SHEET
 // ============================================================
 
+const STATUS_FILTER_OPTIONS: { value: "all" | "pending" | "hired" | "not_hired"; label: string }[] = [
+  { value: "all", label: "All statuses" },
+  { value: "pending", label: "Pending" },
+  { value: "hired", label: "Hired" },
+  { value: "not_hired", label: "Not Hired" },
+];
+
+function StatusFilterDropdown({
+  value,
+  onChange,
+}: {
+  value: "all" | "pending" | "hired" | "not_hired";
+  onChange: (value: "all" | "pending" | "hired" | "not_hired") => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedLabel =
+    STATUS_FILTER_OPTIONS.find((o) => o.value === value)?.label ?? "All statuses";
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center gap-2 rounded-lg border border-white/15 bg-white/[0.03] py-2 pl-4 pr-3 text-sm text-white outline-none transition-colors duration-200 hover:bg-white/[0.06] focus:border-[#00E5E5]/60"
+      >
+        {selectedLabel}
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.8}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={`h-4 w-4 text-white/40 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+        >
+          <path d="m6 9 6 6 6-6" />
+        </svg>
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-20 mt-1 w-40 overflow-hidden rounded-lg border border-white/10 bg-[#111318] shadow-xl">
+          {STATUS_FILTER_OPTIONS.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => {
+                onChange(option.value);
+                setOpen(false);
+              }}
+              className={`block w-full px-4 py-2.5 text-left text-sm transition-colors duration-150 ${
+                option.value === value
+                  ? "bg-[#00E5E5]/10 text-[#00E5E5]"
+                  : "text-white/70 hover:bg-white/[0.06] hover:text-white"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function formatAppliedDate(iso: string) {
   return new Date(iso).toLocaleString(undefined, {
     month: "short",
@@ -644,12 +782,11 @@ function formatAppliedDate(iso: string) {
   });
 }
 
-function CvsPanel() {
+function CvsPanel({ pushToast }: { pushToast: PushToast }) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "hired" | "not_hired">("all");
-  const [confirmMessage, setConfirmMessage] = useState<string | null>(null);
 
   const fetchApplications = async () => {
     setLoading(true);
@@ -659,10 +796,11 @@ function CvsPanel() {
       if (res.ok) {
         setApplications(body.applications ?? []);
       } else {
-        console.error("Failed to load applications:", body.error);
+        pushToast(body.error || "Failed to load applications.", "error");
       }
     } catch (err) {
       console.error("Failed to load applications:", err);
+      pushToast("Failed to load applications.", "error");
     } finally {
       setLoading(false);
     }
@@ -691,19 +829,19 @@ function CvsPanel() {
 
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        console.error("Failed to update application status:", body.error);
+        pushToast(body.error || "Failed to update application status.", "error");
         setApplications(previous);
         return;
       }
 
       const label = status === "hired" ? "Hired" : "Not Hired";
-      setConfirmMessage(
-        target ? `${target.name} marked as ${label}.` : `Marked as ${label}.`
+      pushToast(
+        target ? `${target.name} marked as ${label}.` : `Marked as ${label}.`,
+        "success"
       );
-      // Auto-dismiss after a few seconds.
-      window.setTimeout(() => setConfirmMessage(null), 3500);
     } catch (err) {
       console.error("Failed to update application status:", err);
+      pushToast("Failed to update application status.", "error");
       setApplications(previous);
     } finally {
       setUpdatingId(null);
@@ -727,62 +865,22 @@ function CvsPanel() {
       ? applications
       : applications.filter((a) => a.status === statusFilter);
 
-    return (
+  return (
     <div className="flex h-full flex-col">
-      {/* ── Confirmation toast ── */}
-      {confirmMessage && (
-        <div className="mb-4 flex shrink-0 items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-400"><svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="h-4 w-4 shrink-0"
-          >
-            <path d="M20 6 9 17l-5-5" />
-          </svg>
-          {confirmMessage}
-        </div>
-      )}
-
-            {/* ── Filter dropdown ── */}
+      {/* ── Filter dropdown ── */}
       <div className="mb-4 flex shrink-0 items-center justify-between">
         <p className="text-xs text-white/40">
           Showing {filteredApplications.length} of {applications.length}
         </p>
-        <div className="relative">
-          <select
-            value={statusFilter}
-            onChange={(e) =>
-              setStatusFilter(e.target.value as "all" | "pending" | "hired" | "not_hired")
-            }
-            className="cursor-pointer appearance-none rounded-lg border border-white/15 bg-white/[0.03] py-2 pl-4 pr-9 text-sm text-white outline-none transition-colors duration-200 focus:border-[#00E5E5]/60"
-          >
-            <option value="all" className="bg-[#111318]">All statuses</option>
-            <option value="pending" className="bg-[#111318]">Pending</option>
-            <option value="hired" className="bg-[#111318]">Hired</option>
-            <option value="not_hired" className="bg-[#111318]">Not Hired</option>
-          </select>
-          <svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={1.8}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
-          >
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </div>
+        <StatusFilterDropdown value={statusFilter} onChange={setStatusFilter} />
       </div>
 
-           <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
-        <div className="h-full overflow-auto">
+      <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
+        <div className="h-full overflow-auto [scrollbar-width:thin] [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/15 hover:[&::-webkit-scrollbar-thumb]:bg-white/25">
           <table className="w-full min-w-[900px] border-collapse text-left text-sm">
             <thead className="sticky top-0 z-10">
-              <tr className="border-b border-white/10 bg-[#111318] text-xs font-semibold uppercase tracking-[0.1em] text-white/40"><th className="px-5 py-3">Name</th>
+              <tr className="border-b border-white/10 bg-[#111318] text-xs font-semibold uppercase tracking-[0.1em] text-white/40">
+                <th className="px-5 py-3">Name</th>
                 <th className="px-5 py-3">Email</th>
                 <th className="px-5 py-3">Role</th>
                 <th className="px-5 py-3">Department</th>

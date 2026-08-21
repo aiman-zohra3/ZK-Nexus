@@ -49,8 +49,28 @@ export async function POST(req: NextRequest) {
     if (resume.size > MAX_FILE_SIZE) {
       return NextResponse.json({ error: "Resume file exceeds the 5MB limit." }, { status: 400 });
     }
-    if (!ALLOWED_TYPES.includes(resume.type)) {
+       if (!ALLOWED_TYPES.includes(resume.type)) {
       return NextResponse.json({ error: "Resume must be a PDF or Word document." }, { status: 400 });
+    }
+
+    // ---------- DUPLICATE CHECK ----------
+    // Same email can apply to different roles, but not the same opening twice.
+    if (openingId) {
+      const { data: existing, error: dupCheckError } = await supabaseAdmin
+        .from("job_applications")
+        .select("id")
+        .eq("email", email)
+        .eq("opening_id", openingId)
+        .maybeSingle();
+
+      if (dupCheckError) {
+        console.error("Duplicate application check error:", dupCheckError);
+      } else if (existing) {
+        return NextResponse.json(
+          { error: "An application already exists with this email address." },
+          { status: 409 }
+        );
+      }
     }
 
     // ---------- UPLOAD RESUME TO STORAGE ----------

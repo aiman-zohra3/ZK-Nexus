@@ -140,8 +140,42 @@ export async function PATCH(
       updates.posted_at = postedAt || new Date().toISOString().slice(0, 10);
     }
 
-    if (Object.keys(updates).length === 0) {
+        if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "No fields to update." }, { status: 400 });
+    }
+
+    // Block publishing an opening that has no spots left. Uses whatever positions/filled
+    // values are being set in this same request, falling back to the current DB values
+    // for whichever one isn't included here.
+    if (updates.is_published === true) {
+      let finalPositions: number | undefined = updates.positions as number | undefined;
+      let finalFilled: number | undefined = updates.filled as number | undefined;
+
+      if (finalPositions === undefined || finalFilled === undefined) {
+        const { data: current, error: fetchError } = await supabaseAdmin
+          .from("job_openings")
+          .select("positions, filled")
+          .eq("id", id)
+          .single();
+
+        if (fetchError || !current) {
+          return NextResponse.json({ error: "Opening not found." }, { status: 404 });
+        }
+
+        finalPositions = finalPositions ?? Number(current.positions);
+        finalFilled = finalFilled ?? Number(current.filled);
+      }
+
+      if (
+        typeof finalPositions === "number" &&
+        typeof finalFilled === "number" &&
+        finalPositions - finalFilled <= 0
+      ) {
+        return NextResponse.json(
+          { error: "Cannot publish — no spots available. Increase positions or decrease filled first." },
+          { status: 400 }
+        );
+      }
     }
 
     const { data, error } = await supabaseAdmin

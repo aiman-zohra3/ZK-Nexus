@@ -230,7 +230,7 @@ export default function EmailsClient({
       </div>
 
             {/* ── Stat cards (now double as filters) ── */}
-      <div className="mb-8 grid shrink-0 grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-8 grid shrink-0 grid-cols-3 gap-4 sm:grid-cols-3">
         <button
           type="button"
           onClick={() => setStatusFilter("all")}

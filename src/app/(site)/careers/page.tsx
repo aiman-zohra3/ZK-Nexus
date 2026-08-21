@@ -11,8 +11,13 @@ export default async function CareersPage() {
     .eq("is_published", true)
     .order("created_at", { ascending: false });
 
-  if (error) {
-    console.error("Failed to load job_openings:", error);
+    if (error) {
+    console.error("Failed to load job_openings:", {
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+      code: error.code,
+    });
   }
 
   const jobs: Job[] = (data ?? []).map((row) => ({

@@ -3,8 +3,14 @@ import { ADMIN_COOKIE_NAME } from "@/app/lib/supabaseAdmin";
 
 export async function POST(req: NextRequest) {
   try {
+        const adminPassword = process.env.ADMIN_PASSWORD;
+    if (!adminPassword) {
+      console.error("ADMIN_PASSWORD is not set in the environment.");
+      return NextResponse.json({ error: "Admin login is not configured." }, { status: 500 });
+    }
+
     const { password } = await req.json();
-    if (typeof password !== "string" || password !== (process.env.ADMIN_PASSWORD ?? "12345")) {
+    if (typeof password !== "string" || password !== adminPassword) {
       return NextResponse.json({ error: "Incorrect password." }, { status: 401 });
     }
     const res = NextResponse.json({ success: true });

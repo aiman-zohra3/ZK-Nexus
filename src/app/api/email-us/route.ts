@@ -49,11 +49,27 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const hasMailServer = await domainHasMailServer(email.trim());
+        const hasMailServer = await domainHasMailServer(email.trim());
     if (!hasMailServer) {
       return NextResponse.json(
         { error: "This email domain doesn't appear to accept mail — please double-check it." },
         { status: 400 }
+      );
+    }
+
+    // ---------- DUPLICATE CHECK ----------
+    const { data: existingInquiry, error: dupCheckError } = await supabaseAdmin
+      .from("email_inquiries")
+      .select("id")
+      .eq("email", email.trim())
+      .maybeSingle();
+
+    if (dupCheckError) {
+      console.error("Duplicate inquiry check error:", dupCheckError);
+    } else if (existingInquiry) {
+      return NextResponse.json(
+        { error: "We already have a message on file from this email — we'll get back to you soon." },
+        { status: 409 }
       );
     }
 

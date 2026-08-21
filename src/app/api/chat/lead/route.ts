@@ -22,25 +22,7 @@ interface LeadRequestBody {
 
 export async function POST(req: NextRequest) {
   try {
-    const ip = getClientIp(req);
-    const { success, reset } = await leadRatelimit.limit(ip);
-
-    if (!success) {
-      const retryAfterSeconds = Math.max(
-        1,
-        Math.ceil((reset - Date.now()) / 1000)
-      );
-      return NextResponse.json(
-        {
-          error:
-            "Too many submissions from this device recently — please try again in a bit.",
-        },
-        {
-          status: 429,
-          headers: { "Retry-After": retryAfterSeconds.toString() },
-        }
-      );
-    }
+   
 
     const { name, email, message, topic } = (await req.json()) as LeadRequestBody;
 

@@ -130,9 +130,9 @@ export default function Background() {
   );
 
   return (
-    <div className="relative w-full overflow-hidden bg-[#0B0C10] -mt-3">
+    <div className="relative  overflow-hidden bg-[#0B0C10] -mt-3">
       {/* ===== Background layer (decorative, non-interactive) ===== */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+      <div className="pointer-events-none w-full max-w-8xl mx-auto absolute inset-0 overflow-hidden">
         {/* Subtle grid */}
         <div
           className="absolute inset-0 opacity-[0.05]"

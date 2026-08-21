@@ -61,6 +61,7 @@ async function buildJobsContext(): Promise<string> {
   const { data, error } = await supabaseAdmin
     .from("job_openings")
     .select("*")
+    .eq("is_published", true)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -178,26 +179,6 @@ const submitLeadDeclaration: FunctionDeclaration = {
 
 export async function POST(req: NextRequest) {
   try {
-    // ---- Rate limit first, before touching Gemini at all ----
-    const ip = getClientIp(req);
-    const { success, reset } = await chatRatelimit.limit(ip);
-
-    if (!success) {
-      const retryAfterSeconds = Math.max(
-        1,
-        Math.ceil((reset - Date.now()) / 1000)
-      );
-      return NextResponse.json(
-        {
-          error:
-            "You're sending messages a bit fast — give it a few seconds and try again.",
-        },
-        {
-          status: 429,
-          headers: { "Retry-After": retryAfterSeconds.toString() },
-        }
-      );
-    }
 
     const { messages } = (await req.json()) as { messages: IncomingMessage[] };
 

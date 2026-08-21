@@ -192,10 +192,12 @@ export default function CareersPageClient({ jobs }: { jobs: Job[] }) {
                             Posted {formatPostedDate(job.postedAt)}
                           </p>
                         )}
+      
 
                         {job.description && (
-                          <p className="mt-3 line-clamp-2 text-[#00e5e5]/70 text-sm leading-relaxed ">
-                            Requirement: {job.requirements}
+                          
+                          <p className="mt-2 line-clamp-2 text-white text-sm leading-relaxed ">
+                            Requirement: <span className="text-white/70">{job.requirements}</span>
                           </p>
                         )}
                       </div>
@@ -235,16 +237,6 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-white/15 bg-[#111318] px-6 py-20 text-center">
       <Badge>No open positions currently</Badge>
-      <h3 className="mt-4 max-w-md font-display text-2xl font-semibold">
-        We're always excited to connect with talented developers and
-        cybersecurity professionals.
-      </h3>
-      <a
-        href="mailto:zknexus@gmail.com"
-        className="mt-8 inline-flex items-center gap-2 rounded-lg border border-brand-cyan/50 bg-brand-cyan/10 px-6 py-3 font-mono text-xs font-medium uppercase tracking-[0.15em] text-brand-cyan transition-all duration-300 hover:bg-brand-cyan/20"
-      >
-        Send your resume · zknexus@gmail.com
-      </a>
     </div>
   );
 }
@@ -490,8 +482,8 @@ function ApplyModal({ role, onClose }: { role: Job; onClose: () => void }) {
                     inline-flex items-center gap-2
                     rounded-full
                     bg-[#00E5E5]
-                    px-8
-                    py-4
+                    px-6
+                    py-2.5
                     font-semibold
                     text-black
                     transition-all
